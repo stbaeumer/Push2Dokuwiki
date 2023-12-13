@@ -153,7 +153,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
             File.AppendAllText(anrechnungenNeu, "Es wird angestrebt, zu Beginn eines jeden Schuljahres 10% der Anrechnungsstunden für die unterjährige Vergabe zurückzuhalten." + Environment.NewLine);
             File.AppendAllText(anrechnungenNeu, Environment.NewLine);
 
-            File.AppendAllText(anrechnungenNeu, "  Diese Dtei bitte nicht manuell editieren." + Environment.NewLine);
+            File.AppendAllText(anrechnungenNeu, "  Diese Datei bitte nicht manuell editieren." + Environment.NewLine);
             File.AppendAllText(anrechnungenNeu, Environment.NewLine);
             File.AppendAllText(anrechnungenNeu, Environment.NewLine);
 

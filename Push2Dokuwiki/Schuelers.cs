@@ -28,6 +28,10 @@ namespace Push2Dokuwiki
             schueler.gebname AS Geburtsname,
             schueler.gebort_lkrs AS Geburtsort,
             schueler.s_geburts_land AS Geburtsland,
+            schueler.s_joker_schueler_str_1 AS Wahlklausur12_1,
+            schueler.s_joker_schueler_str_2 AS Wahlklausur12_2,
+            schueler.s_joker_schueler_str_3 AS Wahlklausur13_1,
+            schueler.s_joker_schueler_str_4 AS Wahlklausur13_2,
             schue_sj.vorgang_akt_satz_jn AS AktuellJN,
 schue_sj.s_schulabschluss_bos AS Versetzung1,
 schue_sj.dat_versetzung AS VersetzungsDatumInDiesenBildungsgang,
@@ -337,6 +341,10 @@ ORDER BY ausgetreten DESC, klasse, schueler.name_1, schueler.name_2", connection
                         schueler.Vorname = theRow["Vorname"] == null ? "" : theRow["Vorname"].ToString();
                         schueler.Ort = theRow["Ort"] == null ? "" : theRow["Ort"].ToString();
                         schueler.Klasse = theRow["Klasse"] == null ? "" : theRow["Klasse"].ToString();
+                        schueler.Wahlklausur12_1 = theRow["Wahlklausur12_1"] == null ? "" : theRow["Wahlklausur12_1"].ToString();
+                        schueler.Wahlklausur12_2 = theRow["Wahlklausur12_2"] == null ? "" : theRow["Wahlklausur12_2"].ToString();
+                        schueler.Wahlklausur13_1 = theRow["Wahlklausur13_1"] == null ? "" : theRow["Wahlklausur13_1"].ToString();
+                        schueler.Wahlklausur13_2 = theRow["Wahlklausur13_2"] == null ? "" : theRow["Wahlklausur13_2"].ToString();
                         schueler.Gebdat = theRow["Gebdat"].ToString().Length < 3 ? new DateTime() : DateTime.ParseExact(theRow["Gebdat"].ToString(), "dd.MM.yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
                         schueler.Telefon = theRow["telefon"] == null ? "" : theRow["telefon"].ToString();
                         schueler.Mail = schueler.Kurzname + "@students.berufskolleg-borken.de";

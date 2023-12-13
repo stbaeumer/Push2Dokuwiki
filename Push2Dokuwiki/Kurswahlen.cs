@@ -6,6 +6,7 @@ using System.Data.Odbc;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Policy;
 using System.Text.RegularExpressions;
 
@@ -175,7 +176,7 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                             {
 
                             }
-                        }                        
+                        }
                     }
                     connection.Close();
                 }
@@ -184,13 +185,13 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
             {
                 throw ex;
             }
-                        
+
             File.WriteAllText(belegungslisteNeu, "====== Klausurbelegungspläne ======" + Environment.NewLine);
 
             File.AppendAllText(belegungslisteNeu, Environment.NewLine);
 
             File.AppendAllText(belegungslisteNeu, "Bitte diese Seite nicht manuell ändern." + Environment.NewLine);
-            
+
             File.AppendAllText(belegungslisteNeu, Environment.NewLine);
 
             File.AppendAllText(belegungslisteNeu, "Klausurbelegungspläne des[[berufliches_gymnasium:start | Beruflichen Gymnasiums]]. Siehe auch:" + Environment.NewLine);
@@ -202,7 +203,7 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
 
             File.AppendAllText(belegungslisteNeu, Environment.NewLine);
 
-            var verschiedeneKlassen = (from t in this.OrderBy(x=>x.Klasse) select t.Klasse).Distinct().ToList();
+            var verschiedeneKlassen = (from t in this.OrderBy(x => x.Klasse) select t.Klasse).Distinct().ToList();
 
             foreach (var klasse in verschiedeneKlassen)
             {
@@ -235,23 +236,19 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
 
                 var hzJz = (DateTime.Now.Month > 2 && DateTime.Now.Month <= 9) ? "JZ" : "HZ";
 
-                File.AppendAllText(belegungslisteNeu, "Jahrgang:" + (10 + jahrgang) + "  |  " + (hzJz == "HZ" ? "1." : "2.") + " Halbjahr  |  Konferenzdatum: " + konferenzdatum + "  |  Gliederung: " + gliederung + "((Ob ein Schüler in einem Fach Klausurschreiber ist kann nicht angezeigt werden, weil das Zeugnisprogramm die Information nicht bereithält.))"  + Environment.NewLine);
+                File.AppendAllText(belegungslisteNeu, "Jahrgang:" + (10 + jahrgang) + "  |  " + (hzJz == "HZ" ? "1." : "2.") + " Halbjahr  |  Konferenzdatum: " + konferenzdatum + "  |  Gliederung: " + gliederung + "((Ob ein Schüler in einem Fach Klausurschreiber ist kann nicht angezeigt werden, weil das Zeugnisprogramm die Information nicht bereithält.))" + Environment.NewLine);
                 File.AppendAllText(belegungslisteNeu, Environment.NewLine);
-  
-                var schuelerDieserKlasse = (from t in this.OrderBy(x=>x.Nachname).ThenBy(x=>x.Vorname) where t.Klasse == klasse select t.SchlüsselExtern).Distinct().ToList();
+
+                var schuelerDieserKlasse = (from t in this.OrderBy(x => x.Nachname).ThenBy(x => x.Vorname) where t.Klasse == klasse select t.SchlüsselExtern).Distinct().ToList();
 
                 var bereiche = (from t in this.OrderBy(x => x.Reihenfolge) where t.Klasse == klasse select t.Bereich).Distinct().ToList();
 
                 var klassenleitung = (from t in this.OrderBy(x => x.Reihenfolge) where t.Klasse == klasse select t.Klassenleiter + ", " + t.KlassenleiterName).Distinct().ToList();
 
-                var alleFächer = (from t in this.OrderBy(x => x.Reihenfolge) where t.Klasse == klasse select  new { t.Fach, t.Bereich }).Distinct().ToList();
+                var alleFächer = (from t in this.OrderBy(x => x.Reihenfolge) where t.Klasse == klasse select new { t.Fach, t.Bereich }).Distinct().ToList();
 
                 var kopfzeile1 = "^                                 ^^" + alleFächer[1].Bereich;
                 var kopfzeile2 = "^:::                              ^^";
-
-                var kopfzeile3 = "^                                 ^^";
-                var kopfzeile4 = "^                                 ^^";
-
 
                 for (int i = 0; i < alleFächer.Count; i++)
                 {
@@ -271,6 +268,10 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                     //kopfzeile4 += "1^2^1^2^";
                 }
 
+                // Wahlklausur anhängen
+                kopfzeile1 += "  Wahlklausuren  ^^^^";
+                kopfzeile2 += "12.1^12.2^13.1^13.2^";
+
                 File.AppendAllText(belegungslisteNeu, kopfzeile1 + Environment.NewLine);
                 File.AppendAllText(belegungslisteNeu, kopfzeile2 + Environment.NewLine);
                 //File.AppendAllText(belegungsliste, kopfzeile3 + Environment.NewLine);
@@ -280,6 +281,10 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
 
                 foreach (var id in schuelerDieserKlasse)
                 {
+                    var schueler = (from s in schuelers where s.Id == id select s).FirstOrDefault();
+
+                    var wahlklausur = RemoveLineEndings(schueler.Wahlklausur12_1) + "  |  " + RemoveLineEndings(schueler.Wahlklausur12_2) + "  |  " + RemoveLineEndings(schueler.Wahlklausur13_1) + "  |  " + RemoveLineEndings(schueler.Wahlklausur13_2) + "  |";
+
                     var fächerDesSchülers = (from t in this where t.SchlüsselExtern == id select t).ToList();
 
                     var zeile = "|" + y.ToString().PadLeft(3) + ".|" + (from t in this where t.SchlüsselExtern == id select t.Nachname + ", " + t.Vorname).FirstOrDefault().PadRight(27) + "  |";
@@ -320,7 +325,7 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                             zeile += "     |";
                         }
                     }
-                    File.AppendAllText(belegungslisteNeu, zeile.TrimEnd(' ') + Environment.NewLine);
+                    File.AppendAllText(belegungslisteNeu, zeile.TrimEnd(' ') + wahlklausur + Environment.NewLine);
                 }
             }
 
@@ -332,5 +337,21 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
 
             Global.DateiTauschen(dokuwikipfadUndDatei, belegungslisteNeu);
         }
-    }   
+
+        private string RemoveLineEndings(string value)
+        {
+            if (String.IsNullOrEmpty(value))
+            {
+                return value;
+            }
+            string lineSeparator = ((char)0x2028).ToString();
+            string paragraphSeparator = ((char)0x2029).ToString();
+
+            return value.Replace("\r\n", string.Empty)
+                        .Replace("\n", string.Empty)
+                        .Replace("\r", string.Empty)
+                        .Replace(lineSeparator, string.Empty)
+                        .Replace(paragraphSeparator, string.Empty);
+        }
+    }
 }

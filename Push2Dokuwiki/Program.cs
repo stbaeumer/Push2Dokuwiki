@@ -50,17 +50,17 @@ namespace Push2Dokuwiki
                 teams.Add(new Team("FHR", "FHR", "Bereichsleitung", ":fhr", unterrichts.Fhr(lehrers), anrechnungs));
                                 
                 // Täglicher Abgleich:
-
-                schuelers.Reliabmelder(
-                    @"\\sql01\Dokuwiki\DOKUWIKI\data\pages\religion_abgemeldete.txt",
-                    System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\\religion_abgemeldete.txt"
-                    );
-
+                               
                 Kurswahlen kurswahlen = new Kurswahlen(
                     @"\\sql01\Dokuwiki\DOKUWIKI\data\pages\berufliches_gymnasium\klausurbelegungsplaene.txt",
                     System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\\klausurbelegungsplaene.txt",
                     (from s in schuelers where s.Klasse.StartsWith("G") where !s.Klasse.Contains(aktJahr.ToString()) select s).ToList()
                     );
+
+                schuelers.Reliabmelder(
+                   @"\\sql01\Dokuwiki\DOKUWIKI\data\pages\religion_abgemeldete.txt",
+                   System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\\religion_abgemeldete.txt"
+                   );
 
                 teams.DateiGruppenUndMitgliederErzeugen(
                     @"\\sql01\Dokuwiki\DOKUWIKI\data\pages\kollegium\gruppen.txt",

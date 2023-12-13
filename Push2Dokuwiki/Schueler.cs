@@ -44,5 +44,9 @@ namespace Push2Dokuwiki
         public int IdUntis { get; internal set; }
         public string Klasse { get; internal set; }
         public string LSSchulnummer { get; internal set; }
+        public string Wahlklausur12_1 { get; internal set; }
+        public string Wahlklausur12_2 { get; internal set; }
+        public string Wahlklausur13_1 { get; internal set; }
+        public string Wahlklausur13_2 { get; internal set; }
     }
 }
