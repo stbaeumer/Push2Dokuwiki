@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Security.Cryptography;
 
 namespace Push2Dokuwiki
 {
@@ -45,6 +47,16 @@ namespace Push2Dokuwiki
         public string Eingebracht_13_2 { get; internal set; }
         public string Klassenleiter { get; internal set; }
         public string KlassenleiterName { get; internal set; }
-        public string Abiturfach { get; internal set; }
+        public string Abifach { get; internal set; }
+        public string Lehrkraft { get; internal set; }
+
+        internal bool IstAbifach1bis3()
+        {
+            if (Abifach != null && Abifach != "" && Convert.ToInt32(Abifach) < 4)
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }

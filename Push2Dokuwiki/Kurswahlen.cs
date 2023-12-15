@@ -14,7 +14,7 @@ namespace Push2Dokuwiki
 {
     internal class Kurswahlen : List<Kurswahl>
     {
-        public Kurswahlen(string dokuwikipfadUndDatei, string belegungslisteNeu, List<Schueler> schuelers)
+        public Kurswahlen(string dokuwikipfadUndDatei, string belegungslisteNeu, List<Schueler> schuelers, Unterrichts unterrichts, Lehrers lehrers)
         {
             var abfrage = "";
 
@@ -116,7 +116,7 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                                     kurswahl.SchlüsselExtern = Convert.ToInt32(theRow["SchlüsselExtern"]);
                                     kurswahl.Schuljahr = theRow["Schuljahr"].ToString();
                                     kurswahl.Gliederung = theRow["Gliederung"].ToString();
-                                    kurswahl.Abiturfach = theRow["Abiturfach"].ToString();
+                                    kurswahl.Abifach = theRow["Abiturfach"].ToString();
                                     kurswahl.HatBemerkung = (theRow["Bemerkung1"].ToString() + theRow["Bemerkung2"].ToString() + theRow["Bemerkung3"].ToString()).Contains("Fehlzeiten") ? true : false;
                                     kurswahl.Jahrgang = Convert.ToInt32(theRow["Jahrgang"].ToString().Substring(3, 1));
                                     kurswahl.Name = theRow["Nachname"] + " " + theRow["Vorname"];
@@ -166,8 +166,24 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                                     kurswahl.SchuelerAktivInDieserKlasse = theRow["SchuelerAktivInDieserKlasse"].ToString() == "J";
                                     kurswahl.Beschreibung = "";
 
-                                    if (kurswahl.HzJz == "GO" && kurswahl.Jahrgang > 1)
+                                    if (kurswahl.HzJz == "GO")
                                     {
+                                        kurswahl.Lehrkraft = (from u in unterrichts
+                                                              where u.KlasseKürzel == kurswahl.Klasse
+                                                              where u.FachKürzel == kurswahl.Fach.Replace("  ", " ")
+                                                              select u.LehrerKürzel).FirstOrDefault();
+
+                                        if (kurswahl.Lehrkraft == null)
+                                        {
+                                            var fach = (from u in unterrichts
+                                                        where u.KlasseKürzel == kurswahl.Klasse
+                                                        where u.FachKürzel == kurswahl.Fach.Replace("  ", " ")
+                                                        select u.FachKürzel).FirstOrDefault();
+                                            kurswahl.Lehrkraft = "";
+
+                                            Console.WriteLine(kurswahl.Klasse + ": Atlantis: " + kurswahl.Fach + " <-> Untis: ---");
+                                        }
+
                                         this.Add(kurswahl);
                                     }
                                 }
@@ -190,20 +206,19 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
 
             File.AppendAllText(belegungslisteNeu, Environment.NewLine);
 
-            File.AppendAllText(belegungslisteNeu, "Bitte diese Seite nicht manuell ändern." + Environment.NewLine);
+            File.AppendAllText(belegungslisteNeu, "  Bitte diese Seite nicht manuell ändern." + Environment.NewLine);
 
             File.AppendAllText(belegungslisteNeu, Environment.NewLine);
 
             File.AppendAllText(belegungslisteNeu, "Klausurbelegungspläne des[[berufliches_gymnasium:start | Beruflichen Gymnasiums]]. Siehe auch:" + Environment.NewLine);
 
-            File.AppendAllText(belegungslisteNeu, "  * [[sharepoint>:v:/s/Kollegium2/EXLFsvo7Y1JHmoUtEBzlNkgBSf2GGUAReMIlvHhqniMPvg?e=mknZdi| Erklärvideo]]" + Environment.NewLine);
             File.AppendAllText(belegungslisteNeu, "  * [[oeffentlich:klausurplanung_1_halbjahr | Klausurplanung 1.Halbjahr]]" + Environment.NewLine);
             File.AppendAllText(belegungslisteNeu, "  * [[oeffentlich:klausurplanung_2_halbjahr | Klausurplanung 2.Halbjahr]]" + Environment.NewLine);
             File.AppendAllText(belegungslisteNeu, Environment.NewLine);
 
             File.AppendAllText(belegungslisteNeu, Environment.NewLine);
 
-            var verschiedeneKlassen = (from t in this.OrderBy(x => x.Klasse) select t.Klasse).Distinct().ToList();
+            var verschiedeneKlassen = (from t in this.OrderBy(x => x.Jahrgang).ThenBy(x => x.Klasse) select t.Klasse).Distinct().ToList();
 
             foreach (var klasse in verschiedeneKlassen)
             {
@@ -236,7 +251,8 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
 
                 var hzJz = (DateTime.Now.Month > 2 && DateTime.Now.Month <= 9) ? "JZ" : "HZ";
 
-                File.AppendAllText(belegungslisteNeu, "Jahrgang:" + (10 + jahrgang) + "  |  " + (hzJz == "HZ" ? "1." : "2.") + " Halbjahr  |  Konferenzdatum: " + konferenzdatum + "  |  Gliederung: " + gliederung + "((Ob ein Schüler in einem Fach Klausurschreiber ist kann nicht angezeigt werden, weil das Zeugnisprogramm die Information nicht bereithält.))" + Environment.NewLine);
+                File.AppendAllText(belegungslisteNeu, "Jahrgang:" + (10 + jahrgang) + "  |  " + (hzJz == "HZ" ? "1." : "2.") + " Halbjahr  |  Konferenzdatum: " + konferenzdatum + "  |  Gliederung: " + gliederung + Environment.NewLine);
+
                 File.AppendAllText(belegungslisteNeu, Environment.NewLine);
 
                 var schuelerDieserKlasse = (from t in this.OrderBy(x => x.Nachname).ThenBy(x => x.Vorname) where t.Klasse == klasse select t.SchlüsselExtern).Distinct().ToList();
@@ -245,37 +261,35 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
 
                 var klassenleitung = (from t in this.OrderBy(x => x.Reihenfolge) where t.Klasse == klasse select t.Klassenleiter + ", " + t.KlassenleiterName).Distinct().ToList();
 
-                var alleFächer = (from t in this.OrderBy(x => x.Reihenfolge) where t.Klasse == klasse select new { t.Fach, t.Bereich }).Distinct().ToList();
+                var alleFächer = (from t in this.OrderBy(x => x.Reihenfolge) where t.Klasse == klasse select new { t.Fach, t.Bereich, t.Lehrkraft }).Distinct().ToList();
 
                 var kopfzeile1 = "^                                 ^^" + alleFächer[1].Bereich;
                 var kopfzeile2 = "^:::                              ^^";
+                var kopfzeile3 = "^:::                              ^^";
 
                 for (int i = 0; i < alleFächer.Count; i++)
                 {
                     if (i > 0 && alleFächer[i - 1].Bereich != alleFächer[i].Bereich)
                     {
-                        //kopfzeile1 += alleFächer[i].Bereich + "  ^^^^";
                         kopfzeile1 += alleFächer[i].Bereich + "  ^";
                     }
                     else
                     {
-                        //kopfzeile1 += "^^^^";
                         kopfzeile1 += "^";
                     }
-                    //kopfzeile2 += alleFächer[i].Fach.PadRight(5) + "^^^^";
+
                     kopfzeile2 += alleFächer[i].Fach.PadRight(5) + "^";
-                    //kopfzeile3 += "12^^13^^";
-                    //kopfzeile4 += "1^2^1^2^";
+                    kopfzeile3 += "  " + alleFächer[i].Lehrkraft.PadRight(5) + "^";
                 }
 
                 // Wahlklausur anhängen
                 kopfzeile1 += "  Wahlklausuren  ^^^^";
-                kopfzeile2 += "12.1^12.2^13.1^13.2^";
+                kopfzeile2 += " ^^^^";
+                kopfzeile3 += "12.1^12.2^13.1^13.2^";
 
                 File.AppendAllText(belegungslisteNeu, kopfzeile1 + Environment.NewLine);
                 File.AppendAllText(belegungslisteNeu, kopfzeile2 + Environment.NewLine);
-                //File.AppendAllText(belegungsliste, kopfzeile3 + Environment.NewLine);
-                //File.AppendAllText(belegungsliste, kopfzeile4 + Environment.NewLine);
+                File.AppendAllText(belegungslisteNeu, kopfzeile3 + Environment.NewLine);
 
                 int y = 1;
 
@@ -290,43 +304,90 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                     var zeile = "|" + y.ToString().PadLeft(3) + ".|" + (from t in this where t.SchlüsselExtern == id select t.Nachname + ", " + t.Vorname).FirstOrDefault().PadRight(27) + "  |";
 
                     y++;
+
                     foreach (var fach in alleFächer)
                     {
-                        var belegung = (from f in fächerDesSchülers where f.Fach == fach.Fach select f).FirstOrDefault();
+                        var belegung = (from f in fächerDesSchülers
+                                        where f.Fach == fach.Fach
+                                        select f).FirstOrDefault();
 
                         if (belegung != null)
                         {
-                            if (jahrgang == 2 && hzJz == "HZ")
+                            if (jahrgang == 1)
                             {
-                                zeile += "  " + (belegung.Abiturfach != "" ? "**" + belegung.Abiturfach + "**" : belegung.Eingebracht_12_1) + "  |";
+                                zeile += "  X  |";
                             }
-                            if (jahrgang == 2 && hzJz == "JZ")
+                            else if (belegung.IstAbifach1bis3()) // Abifächer (außer 4.) sind immer P
                             {
-                                zeile += "  " + (belegung.Abiturfach != "" ? "**" + belegung.Abiturfach + "**" : belegung.Eingebracht_12_2) + "  |";
+                                zeile += "  P**(" + belegung.Abifach + ")**  |";
                             }
-                            if (jahrgang == 3 && hzJz == "HZ")
+                            else
                             {
-                                zeile += "  " + (belegung.Abiturfach != "" ? "**" + belegung.Abiturfach + "**" : belegung.Eingebracht_13_1) + "  |";
-                            }
-                            if (jahrgang == 3 && hzJz == "JZ")
-                            {
-                                zeile += "  " + (belegung.Abiturfach != "" ? "**" + belegung.Abiturfach + "**" : belegung.Eingebracht_13_2) + "  |";
-                            }
+                                // 12
 
-                            //zeile 
-                            //    += (belegung.Eingebracht_12_1 != "" ? "X" : " ") + "|" 
-                            //    + (belegung.Eingebracht_12_2 != "" ? "X" : " ") + "|" 
-                            //    + (belegung.Eingebracht_13_1 != "" ? "X" : " ") + "|" 
-                            //    + (belegung.Eingebracht_13_2 != "" ? "X" : " ") + "|";
+                                if (jahrgang == 2)
+                                {
+                                    if (IstFremdsprache(fach.Fach)) // bis einschl 13.1. immer P
+                                    {
+                                        zeile += "  P  |";
+                                    }
+                                    else if (IstDeutschOderMathe(fach.Fach)) // bis einschl 12.2. immer P
+                                    {
+                                        zeile += "  P" + (belegung.Abifach == "4" ? "**(4)**" : "") + "  |";
+                                    }
+                                    else if (IstWahlklausur(fach.Fach, schueler.Wahlklausur12_1)) // W
+                                    {
+                                        zeile += "  W" + (belegung.Abifach == "4" ? "**(4)**" : "") + "  |";
+                                    }
+                                    else
+                                    {
+                                        zeile += "  X" + (belegung.Abifach == "4" ? "**(4)**" : "") + "  |";
+                                    }
+                                }
+
+                                // 13.1
+
+                                if (jahrgang == 3 && hzJz == "HZ")
+                                {
+                                    if (IstFremdsprache(fach.Fach)) // bis einschl 13.1. immer P
+                                    {
+                                        zeile += "  P" + (belegung.Abifach == "4" ? "**(4)**" : "") + "  |";
+                                    }
+                                    else if (IstWahlklausur(fach.Fach, schueler.Wahlklausur13_1)) // W
+                                    {
+                                        zeile += "  W" + (belegung.Abifach == "4" ? "**(4)**" : "") + "  |";
+                                    }
+                                    else
+                                    {
+                                        zeile += "  X" + (belegung.Abifach == "4" ? "**(4)**" : "") + "  |";
+                                    }
+                                }
+
+                                // 13.2
+
+                                if (jahrgang == 3 && hzJz == "JZ")
+                                {
+                                    if (IstWahlklausur(fach.Fach, schueler.Wahlklausur13_1)) // W
+                                    {
+                                        zeile += "  W" + (belegung.Abifach == "4" ? "**(4)**" : "") + "  |";
+                                    }
+                                    else
+                                    {
+                                        zeile += "  X" + (belegung.Abifach == "4" ? "**(4)**" : "") + "  |";
+                                    }
+                                }
+                            }
                         }
                         else
                         {
-                            //zeile += " | | | |" ;
                             zeile += "     |";
                         }
                     }
                     File.AppendAllText(belegungslisteNeu, zeile.TrimEnd(' ') + wahlklausur + Environment.NewLine);
                 }
+
+                File.AppendAllText(belegungslisteNeu, "X: Belegung (ohne Klausur); P: Belegung (mit Pflichtklausur); W: Belegung (mit Wahlklausur); 1,2,3,4: Abiturfächer" + Environment.NewLine);
+                File.AppendAllText(belegungslisteNeu, "" + Environment.NewLine);
             }
 
             File.AppendAllText(belegungslisteNeu, "" + Environment.NewLine);
@@ -336,6 +397,36 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
             File.AppendAllText(belegungslisteNeu, "{{tag>Berufliches_Gymnasium Abitur}}" + Environment.NewLine);
 
             Global.DateiTauschen(dokuwikipfadUndDatei, belegungslisteNeu);
+        }
+
+        private bool IstWahlklausur(string fach, string wahlklausur)
+        {
+            if (
+                fach.Contains(" G") && 
+                wahlklausur != "" && 
+                (from w in RemoveLineEndings(wahlklausur).Split(',').Select(p => p.Trim()).ToList() where fach.StartsWith(w) select w).Any())
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private bool IstDeutschOderMathe(string fach)
+        {
+            if ((fach.StartsWith("D ") || fach.StartsWith("M ")) && fach.Contains(" G"))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private bool IstFremdsprache(string fach)
+        {
+            if ((fach.StartsWith("E ") || fach.StartsWith("N ") || fach.StartsWith("S ")) && fach.Contains(" G"))
+            {
+                return true;
+            }
+            return false;
         }
 
         private string RemoveLineEndings(string value)

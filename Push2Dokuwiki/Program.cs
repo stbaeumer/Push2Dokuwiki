@@ -54,7 +54,9 @@ namespace Push2Dokuwiki
                 Kurswahlen kurswahlen = new Kurswahlen(
                     @"\\sql01\Dokuwiki\DOKUWIKI\data\pages\berufliches_gymnasium\klausurbelegungsplaene.txt",
                     System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\\klausurbelegungsplaene.txt",
-                    (from s in schuelers where s.Klasse.StartsWith("G") where !s.Klasse.Contains(aktJahr.ToString()) select s).ToList()
+                    (from s in schuelers where s.Klasse.StartsWith("G") select s).ToList(),
+                    unterrichts,
+                    lehrers
                     );
 
                 schuelers.Reliabmelder(
