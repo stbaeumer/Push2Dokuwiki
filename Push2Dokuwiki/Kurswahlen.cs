@@ -14,7 +14,7 @@ namespace Push2Dokuwiki
 {
     internal class Kurswahlen : List<Kurswahl>
     {
-        public Kurswahlen(string dokuwikipfadUndDatei, string belegungslisteNeu, List<Schueler> schuelers, Unterrichts unterrichts, Lehrers lehrers)
+        public Kurswahlen(string dokuwikipfadUndDatei, string belegungslisteNeu, List<Schueler> schuelers, Unterrichts unterrichts, Lehrers lehrers,Klasses klasses)
         {
             var abfrage = "";
 
@@ -220,38 +220,24 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
 
             var verschiedeneKlassen = (from t in this.OrderBy(x => x.Jahrgang).ThenBy(x => x.Klasse) select t.Klasse).Distinct().ToList();
 
-            List<string> bbereiche = new List<string>() { "GG", "GT", "GW" };
+            var bbereiche = (from k in klasses where verschiedeneKlassen.Contains(k.NameUntis) select new { V = k.NameUntis.Substring(0, 2), k.BildungsgangLangname, k.WikiLink }).Distinct().ToList();
 
             foreach (var bereich in bbereiche)
             {
                 File.AppendAllText(belegungslisteNeu, Environment.NewLine);
-                File.AppendAllText(belegungslisteNeu, "=====" + bereich + "=====" + Environment.NewLine);
+                File.AppendAllText(belegungslisteNeu, "=====" + bereich.BildungsgangLangname + "=====" + Environment.NewLine);
                 File.AppendAllText(belegungslisteNeu, Environment.NewLine);
 
-                var link = "  * ";
-
-                if (bereich=="GG")
-                {
-                    link += "[[berufliches_gymnasium:gg | Berufliches Gymnasium für Gesundheit und Soziales]]";
-                }
-                if (bereich == "GT")
-                {
-                    link += "[[berufliches_gymnasium:gt | Berufliches Gymnasium für Technik - Ingenieurwissenschaften]]";
-                }
-                if (bereich == "GW")
-                {
-                    link += "[[berufliches_gymnasium:gw | Berufliches Gymnasium für Wirtschaft und Verwaltung]]";
-                }
+                var link = "  * [[" + bereich.WikiLink + " | " + bereich.BildungsgangLangname +" ]]";
 
                 File.AppendAllText(belegungslisteNeu, link + Environment.NewLine);
 
-                foreach (var klasse in verschiedeneKlassen.Where(x => x.StartsWith(bereich)))
+                foreach (var klasse in verschiedeneKlassen.Where(x => x.StartsWith(bereich.V)))
                 {
                     File.AppendAllText(belegungslisteNeu, Environment.NewLine);
                     File.AppendAllText(belegungslisteNeu, "====" + klasse + "====" + Environment.NewLine);
                     File.AppendAllText(belegungslisteNeu, Environment.NewLine);
-
-                    
+                                        
 
                     var jahrgang = (from t in this.OrderBy(x => x.Nachname).ThenBy(x => x.Vorname) where t.Klasse == klasse select t.Jahrgang).FirstOrDefault();
 

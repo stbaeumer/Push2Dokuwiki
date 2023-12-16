@@ -56,7 +56,8 @@ namespace Push2Dokuwiki
                     System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\\klausurbelegungsplaene.txt",
                     (from s in schuelers where s.Klasse.StartsWith("G") select s).ToList(),
                     unterrichts,
-                    lehrers
+                    lehrers,
+                    klasses
                     );
 
                 schuelers.Reliabmelder(
