@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Push2Dokuwiki
 {
@@ -48,5 +50,81 @@ namespace Push2Dokuwiki
         public string Wahlklausur12_2 { get; internal set; }
         public string Wahlklausur13_1 { get; internal set; }
         public string Wahlklausur13_2 { get; internal set; }
+        public Unterrichts UnterrichteAusWebuntis { get; private set; }
+
+        internal int GetUnterrichte(List<Unterricht> unterrichteDerKlasse, List<Gruppe> alleGruppen)
+        {
+            int i = 0;
+            UnterrichteAusWebuntis = new Unterrichts();
+
+            // Unterrichte der ganzen Klasse
+
+            var unterrichteDerKlasseOhneGruppen = (from a in unterrichteDerKlasse
+                                                   where a.Gruppe == ""
+                                                   select a).ToList();
+
+            foreach (var u in unterrichteDerKlasseOhneGruppen)
+            {
+                // Wenn ein Lehrer zweimal mit dem selben Fach in Webuntis eingetragen ist, wird kein weiterer Unterricht angelegt.
+
+                var gibtsSchon = (from x in UnterrichteAusWebuntis where x.Fach == u.Fach where x.Lehrkraft == u.Lehrkraft select x).FirstOrDefault();
+
+                if (gibtsSchon == null)
+                {
+                    i++;
+                    UnterrichteAusWebuntis.Add(new Unterricht(
+                        
+                        u.LessonNumbers[0],
+                        u.Fach,                        
+                        u.Lehrkraft,
+                        u.Zeile,
+                        u.Periode,
+                        u.Gruppe,
+                        u.Klassen,
+                        u.Startdate,
+                        u.Enddate));
+                }
+                else
+                {
+                    gibtsSchon.LessonNumbers.Add(u.LessonNumbers[0]);
+                }
+            }
+
+            // Kurse
+
+            foreach (var gruppe in (from g in alleGruppen where g.StudentId == Id select g).ToList())
+            {
+                var u = (from a in unterrichteDerKlasse where a.Gruppe == gruppe.Gruppenname select a).FirstOrDefault();
+
+                // u ist z.B. null, wenn ein Kurs in der ExportLessons als (lange) abgeschlossen steht.
+
+                if (u != null)
+                {
+                    // Wenn ein Lehrer zweimal mit dem selben Fach in Webuntis eingetragen ist, wird kein weiterer Unterricht angelegt.
+
+                    var gibtsSchon = (from x in UnterrichteAusWebuntis where x.Fach == u.Fach where x.Lehrkraft == u.Lehrkraft select x).FirstOrDefault();
+
+                    if (gibtsSchon == null)
+                    {
+                        i++;
+                        UnterrichteAusWebuntis.Add(new Unterricht(
+                            u.LessonNumbers[0],
+                            u.Fach,
+                            u.Lehrkraft,
+                            u.Zeile,
+                            u.Periode,
+                            u.Gruppe,
+                            u.Klassen,
+                            u.Startdate,
+                            u.Enddate));
+                    }
+                    else
+                    {
+                        gibtsSchon.LessonNumbers.Add(u.LessonNumbers[0]);
+                    }
+                }
+            }
+            return i;
+        }
     }
 }

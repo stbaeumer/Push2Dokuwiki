@@ -57,6 +57,8 @@
     <Compile Include="Fachschaft.cs" />
     <Compile Include="Fachschaften.cs" />
     <Compile Include="Global.cs" />
+    <Compile Include="Gruppe.cs" />
+    <Compile Include="Gruppen.cs" />
     <Compile Include="Interruption.cs" />
     <Compile Include="Klasse.cs" />
     <Compile Include="Klasses.cs" />

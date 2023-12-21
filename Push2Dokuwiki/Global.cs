@@ -171,16 +171,21 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
                 string contentNeu = File.ReadAllText(dateiNeu);
 
                 // Vergleiche die Inhalte der Dateien
+
                 if (contentAlt != contentNeu)
                 {
                     // Überschreibe alt mit dem Inhalt von neu
                     File.WriteAllText(dokuwikiPfadUndDatei, contentNeu);
-                    Console.WriteLine(dokuwikiPfadUndDatei + " wurde mit " + dateiNeu + " überschrieben.");
+                    Console.WriteLine(dokuwikiPfadUndDatei.Substring(0,10) + "..." + dokuwikiPfadUndDatei.Substring(dokuwikiPfadUndDatei.Length -10, 10) + " wurde mit " + dateiNeu + " überschrieben.");
                 }
                 else
                 {
-                    Console.WriteLine(dokuwikiPfadUndDatei + " und " + dateiNeu + " sind identisch. Keine Änderungen vorgenommen.");
+                    Console.WriteLine(dokuwikiPfadUndDatei.Substring(0, 10) + "..." + dokuwikiPfadUndDatei.Substring(dokuwikiPfadUndDatei.Length - 10, 10) + " und " + dateiNeu + " sind identisch. Keine Änderungen vorgenommen.");
                 }
+            }
+            if (File.Exists(dokuwikiPfadUndDatei) && !File.Exists(dateiNeu))
+            {
+                File.Copy(dokuwikiPfadUndDatei, dateiNeu, true);
             }
         }
     }

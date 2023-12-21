@@ -3,12 +3,15 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 namespace Push2Dokuwiki
 {
     public class Unterrichts : List<Unterricht>
     {
+        private string sourceExportLessons;
+
         public Unterrichts()
         {
         }
@@ -249,6 +252,54 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND ((TERM_I
                 finally
                 {
                     odbcConnection.Close();
+                }
+            }
+        }
+
+        public Unterrichts(string sourceExportLessons)
+        {
+            using (StreamReader reader = new StreamReader(sourceExportLessons))
+            {
+                var überschrift = reader.ReadLine();
+                int i = 1;
+
+                while (true)
+                {
+                    i++;
+                    Unterricht unterricht = new Unterricht();
+
+                    string line = reader.ReadLine();
+
+                    try
+                    {
+                        if (line != null)
+                        {
+                            var x = line.Split('\t');
+
+                            unterricht = new Unterricht();
+                            unterricht.LessonNumbers = new List<int>();
+                            unterricht.Zeile = i;
+                            unterricht.LessonId = Convert.ToInt32(x[0]);
+                            unterricht.LessonNumbers.Add(Convert.ToInt32(x[1]) / 100);
+                            unterricht.Fach = x[2];
+                            unterricht.Lehrkraft = x[3];
+                            unterricht.Klassen = x[4];
+                            unterricht.Gruppe = x[5];
+                            unterricht.Periode = Convert.ToInt32(x[6]);
+                            unterricht.Startdate = DateTime.ParseExact(x[7], "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                            unterricht.Enddate = DateTime.ParseExact(x[8], "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                            this.Add(unterricht);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
+
+                    if (line == null)
+                    {
+                        break;
+                    }
                 }
             }
         }

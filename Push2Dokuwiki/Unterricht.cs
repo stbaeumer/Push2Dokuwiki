@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 namespace Push2Dokuwiki
 {
     public class Unterricht
@@ -12,9 +13,21 @@ namespace Push2Dokuwiki
         public int Tag;
         public int Stunde;
         public Unterrichtsgruppe Unterrichtsgruppe;
+        private int v;
+
         public DateTime DatumTagMontagDerKalenderwoche { get; private set; }
         public DateTime Von { get; set; }
         public DateTime Bis { get; set; }
+        public List<int> LessonNumbers { get; internal set; }
+        public int Zeile { get; internal set; }
+        public int LessonId { get; internal set; }
+        public string Fach { get; internal set; }
+        public string Lehrkraft { get; internal set; }
+        public string Klassen { get; internal set; }
+        public string Gruppe { get; internal set; }
+        public int Periode { get; internal set; }
+        public DateTime Startdate { get; internal set; }
+        public DateTime Enddate { get; internal set; }
 
         public Unterricht()
         {
@@ -34,6 +47,19 @@ namespace Push2Dokuwiki
             this.Bis = this.Von.AddMinutes(45);
             this.Stunde = stunde;
             this.Unterrichtsgruppe = unterrichtsgruppe;
+        }
+
+        public Unterricht(int v, string fach, string lehrkraft, int zeile, int periode, string gruppe, string klassen, DateTime startdate, DateTime enddate)
+        {
+            this.v = v;
+            Fach = fach;
+            Lehrkraft = lehrkraft;
+            Zeile = zeile;
+            Periode = periode;
+            Gruppe = gruppe;
+            Klassen = klassen;
+            Startdate = startdate;
+            Enddate = enddate;
         }
 
         private DateTime GetVon(int tag, int stunde, DateTime datumTagMontagDerKalenderwoche)
