@@ -28,6 +28,7 @@ namespace Push2Dokuwiki
                 var aktJahr = DateTime.Now.Month > 7 ? DateTime.Now.Year - 2000 : DateTime.Now.Year - 1 - 2000;
                 var hzJz = (DateTime.Now.Month > 2 && DateTime.Now.Month <= 9) ? "JZ" : "HZ";
 
+
                 Raums raums = new Raums(periode);
                 Lehrers lehrers = new Lehrers(periode, raums, aktJahr);
                 Klasses klasses = new Klasses(periode, lehrers);
