@@ -18,7 +18,7 @@ namespace Push2Dokuwiki
         {
             try
             {
-                Console.WriteLine("      Push2Dokuwiki.exe | Published under the terms of GPLv3 | Stefan Bäumer " + DateTime.Now.Year + " | Version 20231211");
+                Console.WriteLine("      Push2Dokuwiki.exe | Published under the terms of GPLv3 | Stefan Bäumer " + DateTime.Now.Year + " | Version 20231221");
                 Console.WriteLine("=============================================================================================================");
 
                 Periodes periodes = new Periodes();
@@ -68,15 +68,24 @@ namespace Push2Dokuwiki
 
                 // Täglicher Abgleich:
 
+                lehrers.DateiSprechtagErzeugen(
+                    raums,
+                    unterrichts,
+                    @"\\sql01\DokuWiki\DOKUWIKI\data\pages\oeffentlich\sprechtag.txt",
+                    System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\\sprechtag.txt",
+                    klasses
+                    );
+
                 Schuelers vollzeitSuS = new Schuelers();
-                //vollzeitSuS.AddRange(from s in schuelers 
-                //                   where (s.Klasse.StartsWith("G") ||
-                //                   s.Klasse.StartsWith("F") ||
-                //                   s.Klasse.StartsWith("BS") ||
-                //                   s.Klasse.StartsWith("HBW") ||
-                //                   s.Klasse.StartsWith("HBT") ||
-                //                   s.Klasse.StartsWith("HBG"))
-                //                              select s);
+                vollzeitSuS.AddRange(from s in schuelers
+                                     where (s.Klasse.StartsWith("G") ||
+                                     s.Klasse.StartsWith("F") ||
+                                     s.Klasse.StartsWith("BS") ||
+                                     s.Klasse.StartsWith("HBW") ||
+                                     s.Klasse.StartsWith("HBT") ||
+                                     s.Klasse.StartsWith("HBG"))
+                                     select s);
+
                 //vollzeitSuS.Notenlisten(@"\\sql01\Dokuwiki\DOKUWIKI\data\pages\Notenlisten\",
                 //    System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\Notenlisten\",
                 //    unterrichts,

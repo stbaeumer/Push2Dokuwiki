@@ -20,6 +20,7 @@ namespace Push2Dokuwiki
         public int ProzentStelle { get; internal set; }
         public int AlterAmErstenSchultagDiesesJahres { get; internal set; }
         public string Flags { get; internal set; }
+        public string Text2 { get; internal set; }
 
         internal string GetAnrechnungAusTextGekürzt(string name)
         {

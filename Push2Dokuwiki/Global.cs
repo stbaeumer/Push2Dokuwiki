@@ -162,7 +162,7 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
             Console.WriteLine((v + " " + ".".PadRight(100 / 150, '.')).PadRight(93, '.') + go.PadLeft(6), '.');
         }
 
-        internal static void DateiTauschen(string dokuwikiPfadUndDatei, string dateiNeu)
+        internal static bool DateiTauschen(string dokuwikiPfadUndDatei, string dateiNeu)
         {
             if (File.Exists(dokuwikiPfadUndDatei) && File.Exists(dateiNeu))
             {
@@ -171,22 +171,22 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
                 string contentNeu = File.ReadAllText(dateiNeu);
 
                 // Vergleiche die Inhalte der Dateien
-
                 if (contentAlt != contentNeu)
                 {
                     // Überschreibe alt mit dem Inhalt von neu
                     File.WriteAllText(dokuwikiPfadUndDatei, contentNeu);
-                    Console.WriteLine(dokuwikiPfadUndDatei.Substring(0,10) + "..." + dokuwikiPfadUndDatei.Substring(dokuwikiPfadUndDatei.Length -10, 10) + " wurde mit " + dateiNeu + " überschrieben.");
+                    Console.WriteLine(dokuwikiPfadUndDatei + " wurde mit " + dateiNeu + " überschrieben.");
+                    return true;
                 }
                 else
                 {
-                    Console.WriteLine(dokuwikiPfadUndDatei.Substring(0, 10) + "..." + dokuwikiPfadUndDatei.Substring(dokuwikiPfadUndDatei.Length - 10, 10) + " und " + dateiNeu + " sind identisch. Keine Änderungen vorgenommen.");
+                    var l = dokuwikiPfadUndDatei.Length;
+                    var ll = dateiNeu.Length;
+                    Console.WriteLine(dokuwikiPfadUndDatei.Substring(0, 10) + "..." + dokuwikiPfadUndDatei.Substring(l - 25, 25) + " und " + dateiNeu.Substring(0, 10) + "..." + dateiNeu.Substring(ll - 25, 25) + " sind identisch. Keine Änderungen vorgenommen.");
+                    return false;
                 }
             }
-            if (File.Exists(dokuwikiPfadUndDatei) && !File.Exists(dateiNeu))
-            {
-                File.Copy(dokuwikiPfadUndDatei, dateiNeu, true);
-            }
+            return false;
         }
     }
 }
