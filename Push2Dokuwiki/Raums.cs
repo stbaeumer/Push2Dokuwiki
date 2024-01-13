@@ -10,6 +10,8 @@ namespace Push2Dokuwiki
 {
     public class Raums : List<Raum>
     {
+        public int Anzahl { get; internal set; }
+
         public Raums()
         {
         }

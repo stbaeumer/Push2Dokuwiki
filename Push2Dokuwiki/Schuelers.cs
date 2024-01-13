@@ -511,7 +511,7 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
                 {
                     i += schüler.GetUnterrichte(unterrichteDerKlasse, alleGruppen);
                 }
-                
+
             }
             catch (Exception ex)
             {
@@ -710,7 +710,7 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                                                         select u.FachKürzel).FirstOrDefault();
                                             noten.Lehrkraft = "";
 
-                                 //           Console.WriteLine(noten.Klasse + ": Atlantis: " + noten.Fach + " <-> Untis: -");
+                                            //           Console.WriteLine(noten.Klasse + ": Atlantis: " + noten.Fach + " <-> Untis: -");
                                         }
 
                                         if (klasse == noten.Klasse)
@@ -757,7 +757,7 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                                                 where s.Klasse == klasse
                                                 select s).ToList().OrderBy(x => x.Nachname).ThenBy(x => x.Vorname);
 
-                    var alleFächer = (from t in faecherUndNotenDerKlasse.OrderBy(x => x.Reihenfolge) 
+                    var alleFächer = (from t in faecherUndNotenDerKlasse.OrderBy(x => x.Reihenfolge)
                                       where t.Klasse == klasse
                                       where t.Konferenzdatum == konferenzdatum
                                       select new { t.Fach, t.Bereich, t.Lehrkraft }).Distinct().ToList();
@@ -793,7 +793,7 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                                                  where t.Konferenzdatum == konferenzdatum
                                                  select t).ToList();
 
-                        var zeile = "|" + y.ToString().PadLeft(3) + ".|" + (from t in faecherUndNotenDerKlasse where t.SchlüsselExtern == schueler.Id select t.Nachname.Substring(0,2) + ", " + t.Vorname.Substring(0,2)).FirstOrDefault().PadRight(27) + "  |";
+                        var zeile = "|" + y.ToString().PadLeft(3) + ".|" + (from t in faecherUndNotenDerKlasse where t.SchlüsselExtern == schueler.Id select t.Nachname.Substring(0, 2) + ", " + t.Vorname.Substring(0, 2)).FirstOrDefault().PadRight(27) + "  |";
 
                         y++;
 

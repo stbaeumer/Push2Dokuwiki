@@ -182,7 +182,7 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
                 {
                     var l = dokuwikiPfadUndDatei.Length;
                     var ll = dateiNeu.Length;
-                    Console.WriteLine(dokuwikiPfadUndDatei.Substring(0, 10) + "..." + dokuwikiPfadUndDatei.Substring(l - 25, 25) + " und " + dateiNeu.Substring(0, 10) + "..." + dateiNeu.Substring(ll - 25, 25) + " sind identisch. Keine Änderungen vorgenommen.");
+                    Console.WriteLine(dokuwikiPfadUndDatei.Substring(0,10) +"..." + dokuwikiPfadUndDatei.Substring(l-25, 25) + " und " + dateiNeu.Substring(0,10) + "..." + dateiNeu.Substring(ll-25,25) + " sind identisch. Keine Änderungen vorgenommen.");
                     return false;
                 }
             }

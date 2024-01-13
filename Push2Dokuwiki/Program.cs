@@ -18,22 +18,19 @@ namespace Push2Dokuwiki
         {
             try
             {
-                Console.WriteLine("      Push2Dokuwiki.exe | Published under the terms of GPLv3 | Stefan Bäumer " + DateTime.Now.Year + " | Version 20231221");
+                Console.WriteLine("      Push2Dokuwiki.exe | Published under the terms of GPLv3 | Stefan Bäumer " + DateTime.Now.Year + " | Version 20240113");
                 Console.WriteLine("=============================================================================================================");
 
                 Periodes periodes = new Periodes();
-
-
                 var periode = (from p in periodes where p.Bis >= DateTime.Now.Date where DateTime.Now.Date >= p.Von select p.IdUntis).FirstOrDefault();
                 var aktJahr = DateTime.Now.Month > 7 ? DateTime.Now.Year - 2000 : DateTime.Now.Year - 1 - 2000;
-                var hzJz = (DateTime.Now.Month > 2 && DateTime.Now.Month <= 9) ? "JZ" : "HZ";
-
 
                 Raums raums = new Raums(periode);
                 Lehrers lehrers = new Lehrers(periode, raums, aktJahr);
                 Klasses klasses = new Klasses(periode, lehrers);
                 Anrechnungs anrechnungs = new Anrechnungs(periode);                
-                Schuelers schuelers = new Schuelers(klasses);                
+                Schuelers schuelers = new Schuelers(klasses);
+                
                 Fachs fachs = new Fachs();                
                 Unterrichtsgruppes unterrichtsgruppes = new Unterrichtsgruppes();
                 Unterrichts unterrichts = new Unterrichts(periode, klasses, lehrers, fachs, raums, unterrichtsgruppes);
@@ -77,23 +74,12 @@ namespace Push2Dokuwiki
                     klasses
                     );
 
-                Schuelers vollzeitSuS = new Schuelers();
-                vollzeitSuS.AddRange(from s in schuelers
-                                     where (s.Klasse.StartsWith("G") ||
-                                     s.Klasse.StartsWith("F") ||
-                                     s.Klasse.StartsWith("BS") ||
-                                     s.Klasse.StartsWith("HBW") ||
-                                     s.Klasse.StartsWith("HBT") ||
-                                     s.Klasse.StartsWith("HBG"))
-                                     select s);
+                schuelers.Reliabmelder(
+                    @"\\sql01\Dokuwiki\DOKUWIKI\data\pages\religion_abgemeldete.txt",
+                    System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\\religion_abgemeldete.txt"
+                    );
 
-                //vollzeitSuS.Notenlisten(@"\\sql01\Dokuwiki\DOKUWIKI\data\pages\Notenlisten\",
-                //    System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\Notenlisten\",
-                //    unterrichts,
-                //    lehrers,
-                //    klasses
-                //    );
-
+                var hzJz = (DateTime.Now.Month > 2 && DateTime.Now.Month <= 9) ? "JZ" : "HZ";
 
                 Kurswahlen kurswahlen = new Kurswahlen(
                     @"\\sql01\Dokuwiki\DOKUWIKI\data\pages\berufliches_gymnasium\klausurbelegungsplaene.txt",
@@ -102,16 +88,11 @@ namespace Push2Dokuwiki
                     unterrichts,
                     lehrers,
                     klasses,
-                    untisUnterrichts, 
+                    untisUnterrichts,
                     untisGruppen,
                     aktJahr,
                     hzJz
                     );
-
-                schuelers.Reliabmelder(
-                   @"\\sql01\Dokuwiki\DOKUWIKI\data\pages\religion_abgemeldete.txt",
-                   System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\\religion_abgemeldete.txt"
-                   );
 
                 teams.DateiGruppenUndMitgliederErzeugen(
                     @"\\sql01\Dokuwiki\DOKUWIKI\data\pages\kollegium\gruppen.txt",
@@ -132,7 +113,7 @@ namespace Push2Dokuwiki
                     System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\\anrechnungen.txt",
                     klasses
                     );
-                  
+
                 teams.DateiPraktiumErzeugen();
                 
                 Console.ReadKey();

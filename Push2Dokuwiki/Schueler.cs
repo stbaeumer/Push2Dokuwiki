@@ -73,9 +73,9 @@ namespace Push2Dokuwiki
                 {
                     i++;
                     UnterrichteAusWebuntis.Add(new Unterricht(
-                        
+
                         u.LessonNumbers[0],
-                        u.Fach,                        
+                        u.Fach,
                         u.Lehrkraft,
                         u.Zeile,
                         u.Periode,

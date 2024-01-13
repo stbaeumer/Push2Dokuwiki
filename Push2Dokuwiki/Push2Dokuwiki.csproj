@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{FA81A1F7-310E-45A4-9FD0-40B91517560B}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Push2Dokuwiki</RootNamespace>
-    <AssemblyName>Push2Dokuwiki</AssemblyName>
+    <RootNamespace>teams</RootNamespace>
+    <AssemblyName>teams</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

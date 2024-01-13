@@ -5,6 +5,19 @@ namespace Push2Dokuwiki
 {
     public class Lehrer
     {
+        public Lehrer(string nachname, string titel, string geschlecht, string fußnote, string raum)
+        {
+            Nachname = nachname;
+            Titel = titel;
+            Geschlecht = geschlecht;
+            Text2 = fußnote;
+            Raum = raum;
+        }
+
+        public Lehrer()
+        {
+        }
+
         public int IdUntis { get; internal set; }
         public string Kürzel { get; internal set; }
         public string Mail { get; internal set; }
@@ -14,12 +27,13 @@ namespace Push2Dokuwiki
         public string Nachname { get; internal set; }
         public string Vorname { get; internal set; }
         public string Titel { get; internal set; }
-        public object Raum { get; internal set; }
+        public string Raum { get; internal set; }
         public DateTime Geburtsdatum { get; internal set; }
         public double AusgeschütteteAltersermäßigung { get; internal set; }
         public int ProzentStelle { get; internal set; }
         public int AlterAmErstenSchultagDiesesJahres { get; internal set; }
         public string Flags { get; internal set; }
+        public string Beschreibung { get; internal set; }
         public string Text2 { get; internal set; }
 
         internal string GetAnrechnungAusTextGekürzt(string name)

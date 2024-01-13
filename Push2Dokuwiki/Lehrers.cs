@@ -68,7 +68,6 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
                                     lehrer.Raum = (from r in raums where r.IdUntis == sqlDataReader.GetInt32(5) select r.Raumnummer).FirstOrDefault();
                                     lehrer.Titel = Global.SafeGetString(sqlDataReader, 6);
                                     lehrer.Text2 = Global.SafeGetString(sqlDataReader, 10);
-
                                     lehrer.Deputat = Convert.ToDouble(sqlDataReader.GetInt32(7)) / 1000;
                                     lehrer.Geschlecht = Global.SafeGetString(sqlDataReader, 8).Contains("W") ? "w" : "m";
 
@@ -418,107 +417,6 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
             return members;
         }
 
-        internal void DateiSprechtagErzeugen(Raums raums, Unterrichts unterrichts, string dateiSprechtag, string sprechtagNeu, Klasses klasses)
-        {
-            var alleLehrerImUnterrichtKürzel = (from u in unterrichts select u.LehrerKürzel).Distinct().ToList();
-
-            var alleLehrerImUnterricht = new Lehrers();
-            var vergebeneRäume = new Raums();
-
-            foreach (var lehrer in this.OrderBy(x => x.Nachname).ThenBy(x => x.Vorname))
-            {
-                if ((from l in alleLehrerImUnterrichtKürzel where lehrer.Kürzel == l select l).Any())
-                {
-                    // Wenn Raum und Text2 leer sind, dann wird der Lehrer ignoriert 
-
-                    if (!((lehrer.Raum == null || lehrer.Raum == "") && lehrer.Text2 == ""))
-                    {
-                        alleLehrerImUnterricht.Add(lehrer);
-
-                        var r = (from v in vergebeneRäume where v.Raumnummer == lehrer.Raum select v).FirstOrDefault();
-
-                        if (r == null)
-                        {
-                            if (lehrer.Raum != null)
-                            {
-                                vergebeneRäume.Add(new Raum(lehrer.Raum));
-                            }
-                        }
-                        else
-                        {
-                            r.Anzahl++;
-                        }
-                    }
-                }
-            }
-
-            // Hier weitere TN an Sprechtag einbauen
-
-            alleLehrerImUnterricht.Add(new Lehrer("Kessens", "", "w", "Landwirtschaftskammer NRW", "3307"));
-            alleLehrerImUnterricht.Add(new Lehrer("Wenz", "Dr.", "w", "Landwirtschaftskammer NRW", "3301"));
-            alleLehrerImUnterricht.Add(new Lehrer("Plaßmann", "", "m", "Schulleiter, bitte im Schulbüro melden.", "1014"));
-
-            File.WriteAllText(sprechtagNeu, "====== Sprechtag ======" + Environment.NewLine);
-            File.AppendAllText(sprechtagNeu, Environment.NewLine);
-
-            File.AppendAllText(sprechtagNeu, "Zum jährlichen Sprechtag laden wir sehr herzlich am Mittwoch nach der Zeugnisausgabe in der Zeit von 13:30 bis 17:30 Uhr ein. Der Unterricht endet nach der 5. Stunde um 12:00 Uhr." + Environment.NewLine);
-
-            int i = 1;
-            File.AppendAllText(sprechtagNeu, Environment.NewLine);
-            File.AppendAllText(sprechtagNeu, "<WRAP column 15em>" + Environment.NewLine);
-            File.AppendAllText(sprechtagNeu, Environment.NewLine);
-            File.AppendAllText(sprechtagNeu, "^Name^Raum^" + Environment.NewLine);
-
-            var lehrerProSpalteAufSeite2 = ((alleLehrerImUnterricht.Count - 60) / 3) + 1;
-
-            foreach (var l in alleLehrerImUnterricht.OrderBy(x => x.Nachname))
-            {
-                File.AppendAllText(sprechtagNeu, "|" + (l.Geschlecht == "m" ? "Herr " : "Frau ") + (l.Titel == "" ? "" : l.Titel + " ") + l.Nachname + (l.Text2 == "" ? "" : " ((" + l.Text2 + "))") + "|" + (l.Raum == "" ? "|" : l.Raum + "|") + Environment.NewLine);
-
-                if (i == 20 || i == 40 || i == 60 || i == 60 + lehrerProSpalteAufSeite2 || i == 60 + lehrerProSpalteAufSeite2 * 2)
-                {
-                    File.AppendAllText(sprechtagNeu, "</WRAP>" + Environment.NewLine);
-                    File.AppendAllText(sprechtagNeu, Environment.NewLine);
-
-                    if (i == 60)
-                    {
-                        File.AppendAllText(sprechtagNeu, "<pagebreak>" + Environment.NewLine);
-                    }
-
-                    File.AppendAllText(sprechtagNeu, "<WRAP column 15em>" + Environment.NewLine);
-                    File.AppendAllText(sprechtagNeu, Environment.NewLine);
-                    File.AppendAllText(sprechtagNeu, "^Name^Raum^" + Environment.NewLine);
-                }
-                i++;
-            }
-
-            File.AppendAllText(sprechtagNeu, "</WRAP>" + Environment.NewLine);
-            File.AppendAllText(sprechtagNeu, Environment.NewLine);
-
-            File.AppendAllText(sprechtagNeu, "Klassenleitungen finden die Einladung als Kopiervorlage im [[sharepoint>:f:/s/Kollegium2/EjakJvXmitdCkm_iQcqOTLwB-9EWV5uqXE8j3BrRzKQQAw?e=OwxG0N|Sharepoint]].\r\n" + Environment.NewLine);
-
-            File.AppendAllText(sprechtagNeu, Environment.NewLine);
-            File.AppendAllText(sprechtagNeu, "{{tag>Termine}}" + Environment.NewLine);
-
-
-            if (Global.DateiTauschen(dateiSprechtag, sprechtagNeu))
-            {
-                // freie Räume suchen
-
-                Console.WriteLine("Freie Räume für Sprechtag");
-                Console.WriteLine("=========================");
-                string freieR = "";
-                foreach (var raum in raums.OrderBy(x => x.Raumnummer))
-                {
-                    if (!(from v in vergebeneRäume where v.Raumnummer == raum.Raumnummer select v).Any())
-                    {
-                        freieR += raum.Raumnummer + ",";
-                    }
-                }
-                Console.WriteLine(freieR.TrimEnd(','));
-            }
-        }
-
         internal List<Lehrer> GetAnrechungenAusBeschreibung(string name)
         {
             List<Lehrer> a = new List<Lehrer>();
@@ -586,6 +484,107 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
                 }
             }
             return members;
+        }
+
+        internal void DateiSprechtagErzeugen(Raums raums, Unterrichts unterrichts, string dateiSprechtag, string sprechtagNeu, Klasses klasses)
+        {
+            var alleLehrerImUnterrichtKürzel = (from u in unterrichts select u.LehrerKürzel).Distinct().ToList();
+
+            var alleLehrerImUnterricht = new Lehrers();
+            var vergebeneRäume = new Raums();
+
+            foreach (var lehrer in this.OrderBy(x=>x.Nachname).ThenBy(x=>x.Vorname))
+            {
+                if ((from l in alleLehrerImUnterrichtKürzel where lehrer.Kürzel == l select l).Any())
+                {
+                    // Wenn Raum und Text2 leer sind, dann wird der Lehrer ignoriert 
+
+                    if (!((lehrer.Raum == null || lehrer.Raum == "") && lehrer.Text2 == ""))
+                    {
+                        alleLehrerImUnterricht.Add(lehrer);
+
+                        var r = (from v in vergebeneRäume where v.Raumnummer == lehrer.Raum select v).FirstOrDefault();
+                        
+                        if (r == null)
+                        {
+                            if (lehrer.Raum != null)
+                            {
+                                vergebeneRäume.Add(new Raum(lehrer.Raum));
+                            }
+                        }
+                        else
+                        {
+                            r.Anzahl++;
+                        }                        
+                    }
+                }
+            }
+
+            // Hier weitere TN an Sprechtag einbauen
+
+            alleLehrerImUnterricht.Add(new Lehrer("Kessens", "", "w", "Landwirtschaftskammer NRW", "3307"));
+            alleLehrerImUnterricht.Add(new Lehrer("Wenz", "Dr.", "w", "Landwirtschaftskammer NRW", "3301"));
+            alleLehrerImUnterricht.Add(new Lehrer("Plaßmann", "", "m", "Schulleiter, bitte im Schulbüro melden.", "1014"));
+
+            File.WriteAllText(sprechtagNeu, "====== Sprechtag ======" + Environment.NewLine);
+            File.AppendAllText(sprechtagNeu, Environment.NewLine);
+
+            File.AppendAllText(sprechtagNeu, "Zum jährlichen Sprechtag laden wir sehr herzlich am Mittwoch nach der Zeugnisausgabe in der Zeit von 13:30 bis 17:30 Uhr ein. Der Unterricht endet nach der 5. Stunde um 12:00 Uhr." + Environment.NewLine);
+
+            int i = 1;
+            File.AppendAllText(sprechtagNeu, Environment.NewLine);
+            File.AppendAllText(sprechtagNeu, "<WRAP column 15em>" + Environment.NewLine);
+            File.AppendAllText(sprechtagNeu, Environment.NewLine);
+            File.AppendAllText(sprechtagNeu, "^Name^Raum^" + Environment.NewLine);
+
+            var lehrerProSpalteAufSeite2 = ((alleLehrerImUnterricht.Count - 60) / 3) + 1;
+
+            foreach (var l in alleLehrerImUnterricht.OrderBy(x=>x.Nachname))
+            {
+                File.AppendAllText(sprechtagNeu, "|" + (l.Geschlecht == "m" ? "Herr " : "Frau ") + (l.Titel == "" ? "" : l.Titel + " ") + l.Nachname + (l.Text2 == "" ? "" : " ((" + l.Text2 + "))") + "|" + (l.Raum == "" ? "|" : l.Raum + "|") + Environment.NewLine);
+                
+                if (i == 20 || i == 40 || i == 60 || i == 60 + lehrerProSpalteAufSeite2 || i == 60 + lehrerProSpalteAufSeite2 * 2)
+                {
+                    File.AppendAllText(sprechtagNeu, "</WRAP>" + Environment.NewLine);                    
+                    File.AppendAllText(sprechtagNeu, Environment.NewLine);
+
+                    if (i == 60)
+                    {
+                        File.AppendAllText(sprechtagNeu, "<pagebreak>" + Environment.NewLine);
+                    }
+
+                    File.AppendAllText(sprechtagNeu, "<WRAP column 15em>" + Environment.NewLine);
+                    File.AppendAllText(sprechtagNeu, Environment.NewLine);
+                    File.AppendAllText(sprechtagNeu, "^Name^Raum^" + Environment.NewLine);                    
+                }    
+                i++;
+            }
+
+            File.AppendAllText(sprechtagNeu, "</WRAP>" + Environment.NewLine);
+            File.AppendAllText(sprechtagNeu, Environment.NewLine);
+
+            File.AppendAllText(sprechtagNeu, "Klassenleitungen finden die Einladung als Kopiervorlage im [[sharepoint>:f:/s/Kollegium2/EjakJvXmitdCkm_iQcqOTLwB-9EWV5uqXE8j3BrRzKQQAw?e=OwxG0N|Sharepoint]].\r\n" + Environment.NewLine);
+
+            File.AppendAllText(sprechtagNeu, Environment.NewLine);
+            File.AppendAllText(sprechtagNeu, "{{tag>Termine}}" + Environment.NewLine);
+            
+
+            if (Global.DateiTauschen(dateiSprechtag, sprechtagNeu))
+            {
+                // freie Räume suchen
+
+                Console.WriteLine("Freie Räume für Sprechtag");
+                Console.WriteLine("=========================");
+                string freieR = "";
+                foreach (var raum in raums.OrderBy(x=>x.Raumnummer))
+                {
+                    if (!(from v in vergebeneRäume where v.Raumnummer == raum.Raumnummer select v).Any())
+                    {
+                        freieR += raum.Raumnummer + ",";
+                    }
+                }
+                Console.WriteLine(freieR.TrimEnd(','));
+            }
         }
     }
 }
