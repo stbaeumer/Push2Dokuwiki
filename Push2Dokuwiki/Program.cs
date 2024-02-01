@@ -18,7 +18,7 @@ namespace Push2Dokuwiki
         {
             try
             {
-                Console.WriteLine("      Push2Dokuwiki.exe | Published under the terms of GPLv3 | Stefan Bäumer " + DateTime.Now.Year + " | Version 20240113");
+                Console.WriteLine("      Push2Dokuwiki.exe | Published under the terms of GPLv3 | Stefan Bäumer " + DateTime.Now.Year + " | Version 20240131");
                 Console.WriteLine("=============================================================================================================");
 
                 Periodes periodes = new Periodes();

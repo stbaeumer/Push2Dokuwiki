@@ -524,7 +524,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
 
             //alleLehrerImUnterricht.Add(new Lehrer("Kessens", "", "w", "Landwirtschaftskammer NRW", "3307"));
             //alleLehrerImUnterricht.Add(new Lehrer("Wenz", "Dr.", "w", "Landwirtschaftskammer NRW", "3301"));
-            alleLehrerImUnterricht.Add(new Lehrer("Plaßmann", "", "m", "Schulleiter, bitte im Schulbüro melden.", "1014"));
+            //alleLehrerImUnterricht.Add(new Lehrer("Plaßmann", "", "m", "Schulleiter, bitte im Schulbüro melden.", "1014"));
 
             File.WriteAllText(sprechtagNeu, "====== Sprechtag ======" + Environment.NewLine);
             File.AppendAllText(sprechtagNeu, Environment.NewLine);
@@ -550,7 +550,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
 
                     if (i == 60)
                     {
-                        File.AppendAllText(sprechtagNeu, "<WRAP pagebreak></WRAP" + Environment.NewLine);
+                        File.AppendAllText(sprechtagNeu, "<WRAP pagebreak>" + Environment.NewLine);
                     }
 
                     File.AppendAllText(sprechtagNeu, "<WRAP column 15em>" + Environment.NewLine);
