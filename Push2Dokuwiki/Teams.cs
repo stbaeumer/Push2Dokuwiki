@@ -16,56 +16,62 @@ namespace Push2Dokuwiki
             {
                 foreach (var klasse in (from k in klasses where (k.Klassenleitungen != null && k.Klassenleitungen.Count > 0 && k.Klassenleitungen[0] != null && k.NameUntis.Any(char.IsDigit)) select k))
                 {
-                    Team team = new Team();
-                    if (klasseOderBg == "Klasse")
-                    {
-                        team.Langname = klasse.NameUntis;
-                        team.Kurzname = klasse.BildungsgangGekürzt;
-                    }
-                    else
-                    {
-                        team.Langname = klasse.BildungsgangLangname;
-                        team.Kurzname = klasse.BildungsgangGekürzt;
-                    }
-                    
-                    team.Kategorie = klasseOderBg;
+                    // Wenn das Team mit diesem Namen schon angelegt wurde, wird es nicht nochmal angelegt
 
-                    Lehrers unterrL = new Lehrers();
-
-                    foreach (var unterricht in unterrichts)
+                    if (!(from t in this where t.Kurzname == klasse.BildungsgangGekürzt select t).Any())
                     {
-                        if (unterricht.KlasseKürzel == klasse.NameUntis)
+                        Team team = new Team();
+
+                        if (klasseOderBg == "Klasse")
                         {
-                            if ((from u in unterrL where u.Kürzel == unterricht.LehrerKürzel select u).Any())
-                            {
-                                var ll = (from l in lehrers where l.Kürzel == unterricht.LehrerKürzel select l).FirstOrDefault();
+                            team.Langname = klasse.NameUntis;
+                            team.Kurzname = klasse.BildungsgangGekürzt;
+                        }
+                        else
+                        {
+                            team.Langname = klasse.BildungsgangLangname;
+                            team.Kurzname = klasse.BildungsgangGekürzt;
+                        }
 
-                                unterrL.Add(ll);
+                        team.Kategorie = klasseOderBg;
+
+                        Lehrers unterrL = new Lehrers();
+
+                        foreach (var unterricht in unterrichts)
+                        {
+                            if (unterricht.KlasseKürzel == klasse.NameUntis)
+                            {
+                                if ((from u in unterrL where u.Kürzel == unterricht.LehrerKürzel select u).Any())
+                                {
+                                    var ll = (from l in lehrers where l.Kürzel == unterricht.LehrerKürzel select l).FirstOrDefault();
+
+                                    unterrL.Add(ll);
+                                }
                             }
                         }
-                    }
 
-                    var unterrichtendeLehrer = (from l in lehrers
-                                                where (from u in unterrichts where u.KlasseKürzel.Split(',').Contains(klasse.NameUntis) select u.LehrerKürzel).ToList().Contains(l.Kürzel)
-                                                where l.Mail != null
-                                                where l.Mail != ""
-                                                select l).ToList();
+                        var unterrichtendeLehrer = (from l in lehrers
+                                                    where (from u in unterrichts where u.KlasseKürzel.Split(',').Contains(klasse.NameUntis) select u.LehrerKürzel).ToList().Contains(l.Kürzel)
+                                                    where l.Mail != null
+                                                    where l.Mail != ""
+                                                    select l).ToList();
 
-                    foreach (var unterrichtenderLehrer in unterrichtendeLehrer)
-                    {
-                        if (!team.Members.Contains(unterrichtenderLehrer))
+                        foreach (var unterrichtenderLehrer in unterrichtendeLehrer)
                         {
-                            team.Members.Add(unterrichtenderLehrer); // Owner müssen immer auch member sein.
+                            if (!team.Members.Contains(unterrichtenderLehrer))
+                            {
+                                team.Members.Add(unterrichtenderLehrer); // Owner müssen immer auch member sein.
+                            }
                         }
-                    }
 
-                    team.Schuelers = (from s in schuelers
-                                      where s.Klasse == klasse.NameUntis
-                                      select s).ToList();
+                        team.Schuelers = (from s in schuelers
+                                          where s.Klasse == klasse.NameUntis
+                                          select s).ToList();
 
-                    if (team.Members.Count() > 0)
-                    {
-                        this.Add(team);
+                        if (team.Members.Count() > 0)
+                        {
+                            this.Add(team);
+                        }
                     }
                 }
 
@@ -167,7 +173,7 @@ teamSoll.Langname.StartsWith("HB")))
                     // Die Schulleiterin wird zuerst genannt. Alle anderen Gruppen bleiben alphabetisch sortiert.
 
                     if (team != null && (team.Langname == "Schulleitung" || team.Members.Count == 1))
-                    {
+                    {                        
                         foreach (var member in team.Members.OrderBy(x => x.Vorname))
                         {
                             mitgliederNachname += member.Vorname.Substring(0, 1) + "." + member.Nachname + ", ";
@@ -181,22 +187,20 @@ teamSoll.Langname.StartsWith("HB")))
                         {
                             foreach (var member in team.Members.OrderBy(x => x.Nachname))
                             {
-                                mitgliederNachname += member.Vorname.Substring(0, 1) + "." + member.Nachname + ", ";
-                                mitgliederMail += "<" + member.Mail + ">; ";
-                                hyperlink += member.Mail + ", ";
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            foreach (var member in team.Members)
-                            {
-                                if (member.Vorname != null && member.Vorname != "")
+                                try
                                 {
                                     mitgliederNachname += member.Vorname.Substring(0, 1) + "." + member.Nachname + ", ";
                                     mitgliederMail += "<" + member.Mail + ">; ";
                                     hyperlink += member.Mail + ", ";
                                 }
+                                catch (Exception ex)
+                                {   
+                                }
                             }
+                        }
+                        catch (Exception)
+                        {
+                            
                         }
                     }
 
@@ -223,6 +227,7 @@ teamSoll.Langname.StartsWith("HB")))
                     throw ex;
                 }
             }
+            File.AppendAllText(dateiGruppenUndMitgliederNeu, "" + Environment.NewLine);
             File.AppendAllText(dateiGruppenUndMitgliederNeu, "" + Environment.NewLine);
             File.AppendAllText(dateiGruppenUndMitgliederNeu, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine);
 

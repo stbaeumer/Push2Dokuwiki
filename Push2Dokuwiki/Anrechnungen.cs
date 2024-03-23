@@ -159,9 +159,13 @@ ORDER BY CountValue.TEACHER_ID;
         {
             foreach (var a in this)
             {
+                if (a.TextGekürzt.Contains("Gärt"))
+                {
+                    string aaa = "";
+                }
                 if (a.Text != null && a.Text != "" && a.Text.Contains("Bildungsgangleitung"))
                 {
-                    if (bildungsgang.Langname != null && bildungsgang.Langname != "" && ((a.Text.Contains(bildungsgang.Langname)) || (a.Beschr != null && a.Beschr != "" && (a.Beschr.ToLower().Contains(":" + bildungsgang.Kurzname.ToLower()) || (a.Beschr.ToLower().EndsWith(bildungsgang.Kurzname.ToLower()))))));
+                    if (bildungsgang.Langname != null && bildungsgang.Langname != "" && (bildungsgang.Langname.Contains(a.TextGekürzt)))
                     {
                         if (a.TeacherIdUntis != 0)
                         {
@@ -196,9 +200,12 @@ ORDER BY CountValue.TEACHER_ID;
             if (lid == 0)
             {
                 lid = (from a in this where a.Text.Contains(leitungsbezeichnung) select a.TeacherIdUntis).FirstOrDefault();
-            } 
-
-            return (from l in lehrers where l.IdUntis == lid select l).FirstOrDefault();
+            }
+            if (leitungsbezeichnung != "")
+            {
+                return (from l in lehrers where l.IdUntis == lid select l).FirstOrDefault();
+            }
+            return null;
         }
 
         internal string GetWikiLink(List<Lehrer> lehrers, string name, string suchkriterium)

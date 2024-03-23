@@ -360,6 +360,31 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND ((TERM_I
             return members;
         }
 
+        internal List<Lehrer> AbiturNur13er(Lehrers lehrers)
+        {
+            var members = new List<Lehrer>();
+
+            var aktJahr = (Convert.ToInt32(DateTime.Now.Month > 7 ? DateTime.Now.Year - 2000 : DateTime.Now.Year - 1 - 2000) - 2).ToString();
+
+            foreach (var unterricht in this)
+            {
+                if (unterricht.KlasseKürzel.StartsWith("G") && unterricht.KlasseKürzel.Contains(aktJahr))
+                {
+                    var lehrer = (from l in lehrers where l.Kürzel == unterricht.LehrerKürzel select l).FirstOrDefault();
+
+                    if (lehrer != null)
+                    {
+                        if (!members.Contains(lehrer))
+                        {
+                            members.Add(lehrer);
+                        }
+                    }
+                }
+            }
+
+            return members;
+        }
+
         private DateTime GetMondayDateOfWeek(int week, int year)
         {
             int i = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(new DateTime(year, 1, 1), CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
@@ -519,63 +544,52 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND ((TERM_I
 
         internal Lehrers GetMembers(Bildungsgang bildungsgang, Lehrers lehrers, Unterrichts unterrichts)
         {
-            Lehrers lehrer = new Lehrers();
+            List<Lehrer> lehrer = new List<Lehrer>();
 
             foreach (var unterricht in this)
-            {
-                if (unterricht.KlasseKürzel.StartsWith(bildungsgang.Kurzname))
-                {
+            {                
+                if ((unterricht.KlasseKürzel.StartsWith(bildungsgang.Kurzname) || unterricht.KlasseKürzel.Contains("," + bildungsgang.Kurzname) && unterricht.KlasseKürzel.Any(c => char.IsDigit(c))))
+                    {
+                    if (bildungsgang.Kurzname.StartsWith("BT"))
+                    {
+                        string aaa = "";
+                    }
                     var leh = (from l in lehrers 
                                where l.Kürzel == unterricht.LehrerKürzel 
+                               where unterricht.KlasseKürzel.Any(c => char.IsDigit(c))
                                select l).FirstOrDefault();
 
-                    if (!(from l in lehrer where l.Mail == leh.Mail select l).Any())
+                    if (leh != null && !(from l in lehrer where l.Mail == leh.Mail select l).Any())
                     {
                         lehrer.Add(leh);
                     }
                 }
             }
-            return lehrer;
+
+            var llll = new Lehrers();
+
+            foreach (var leh in lehrer.OrderBy(x=>x.Nachname)) 
+            {
+                if (!(from ll in llll where ll.Mail == leh.Mail select ll).Any())
+                {
+                    if (leh.Vorname != null && leh.Vorname != "" && leh.Nachname!= null && leh.Nachname != "")
+                    {
+                        llll.Add(leh);
+                    }
+                    else
+                    {
+                        Console.WriteLine(leh.Kürzel + " hat keinen Vor- und Nachnamen");
+                    }
+                }
+            }
+
+            return llll;
         }
 
-        internal List<Lehrer> Fachschaften(Lehrers lehrers, string fach)
+        internal List<Lehrer> Fachschaften(Lehrers lehrers, List<string> fächer)
         {
             var fachlehrers = new List<Lehrer>();
-            var fächer = new List<string>();
-
-            if (fach == "E")
-            {
-                fächer = new List<string>() { "E", "E FU", "E1", "E2", "E G1", "E G2", "E L1", "E L2", "E L", "EL", "EL1", "EL2" };
-            }
-            if (fach == "Bi")
-            {
-                fächer = new List<string>() { "Bi", "Bi FU", "Bi1", "Bi G1", "Bi G2" };
-            }
-            if (fach == "REL")
-            {
-                fächer = new List<string>() { "KR", "KR FU", "KR1", "KR2", "KR G1", "KR G2", "ER", "ER G1" };
-            }
-            if (fach == "WL")
-            {
-                fächer = new List<string>() { "WL", "WBL" };
-            }
-            if (fach == "D")
-            {
-                fächer = new List<string>() { "D", "D FU", "D1", "D2", "D G1", "D G2", "D L1", "D L2", "D L", "DL", "DL1", "DL2" };
-            }
-            if (fach == "M")
-            {
-                fächer = new List<string>() { "M", "M FU", "M1", "M2", "M G1", "M G2", "M L1", "M L2", "M L", "ML", "ML1", "ML2" };
-            }
-            if (fach == "PK")
-            {
-                fächer = new List<string>() { "PK", "PK FU", "PK1", "PK2", "GG G1", "GG G2" };
-            }
-            if (fach == "SP")
-            {
-                fächer = new List<string>() { "SP", "SP G1", "SP G2" };
-            }
-
+            
             try
             {
                 foreach (var u in (from t in this where fächer.Contains(t.FachKürzel) select t).ToList())

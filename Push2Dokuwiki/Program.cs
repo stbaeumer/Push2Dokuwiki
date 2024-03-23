@@ -43,26 +43,28 @@ namespace Push2Dokuwiki
                 var untisGruppen = new Gruppen(sourceStudentgroupStudents);
 
                 Teams teams = new Teams();                
-                teams.AddRange(new Teams(klasses, lehrers, schuelers, unterrichts, "Bildungsgang"));
-                teams.AddRange(new Teams(klasses, lehrers, schuelers, unterrichts, "Klasse"));
+                //teams.AddRange(new Teams(klasses, lehrers, schuelers, unterrichts, "Bildungsgang"));
+                //teams.AddRange(new Teams(klasses, lehrers, schuelers, unterrichts, "Klasse"));
 
+                
                 teams.AddRange(new Teams(bildungsgangs));
-                teams.Add(new Team("Fachschaft Englisch", "Fachschaft Englisch", "Vorsitz", ":fachschaften:deutsch_kommunikation", unterrichts.Fachschaften(lehrers, "E"), anrechnungs));
-                teams.Add(new Team("Fachschaft Religion", "Fachschaft Religion", "Vorsitz", ":fachschaften:religionslehre", unterrichts.Fachschaften(lehrers, "REL"), anrechnungs));
-                teams.Add(new Team("Fachschaft Mathematik", "Fachschaft Mathematik", "Vorsitz", ":fachschaften:mathematik_physik", unterrichts.Fachschaften(lehrers, "M"), anrechnungs));
-                teams.Add(new Team("Fachschaft Politik", "Fachschaft Politik", "Vorsitz", ":fachschaften:politik_gesellschaftslehre", unterrichts.Fachschaften(lehrers, "PK"), anrechnungs));
-                teams.Add(new Team("Fachschaft Wirtschaftslehre", "Fachschaft Wirtschaftslehre", "Vorsitz", ":fachschaften:wirtschaftslehre_in_nicht_kaufmaennischen_klassen", unterrichts.Fachschaften(lehrers, "WL"), anrechnungs));
-                teams.Add(new Team("Fachschaft Sport", "Fachschaft Sport", "Vorsitz", ":fachschaften:sport", unterrichts.Fachschaften(lehrers, "SP"), anrechnungs));
-                teams.Add(new Team("Fachschaft Biologie", "Fachschaft Biologie", "Vorsitz", ":fachschaften:biologie", unterrichts.Fachschaften(lehrers, "Bi"), anrechnungs));
+                teams.Add(new Team("Fachschaft Englisch", "Fachschaft Englisch", "Vorsitz", ":fachschaften:deutsch_kommunikation", unterrichts.Fachschaften(lehrers, new List<string>() { "E", "E FU", "E1", "E2", "E G1", "E G2", "E L1", "E L2", "E L", "EL", "EL1", "EL2" }), anrechnungs));
+                teams.Add(new Team("Fachschaft Religion", "Fachschaft Religion", "Vorsitz", ":fachschaften:religionslehre", unterrichts.Fachschaften(lehrers, new List<string>() { "KR", "KR FU", "KR1", "KR2", "KR G1", "KR G2", "ER", "ER G1" }), anrechnungs));
+                teams.Add(new Team("Fachschaft Mathematik", "Fachschaft Mathematik", "Vorsitz", ":fachschaften:mathematik_physik", unterrichts.Fachschaften(lehrers, new List<string>() { "M", "M FU", "M1", "M2", "M G1", "M G2", "M L1", "M L2", "M L", "ML", "ML1", "ML2" }), anrechnungs));
+                teams.Add(new Team("Fachschaft Politik", "Fachschaft Politik", "Vorsitz", ":fachschaften:politik_gesellschaftslehre", unterrichts.Fachschaften(lehrers, new List<string>() { "PK", "PK FU", "PK1", "PK2", "GG G1", "GG G2" }), anrechnungs));
+                teams.Add(new Team("Fachschaft Wirtschaftslehre", "Fachschaft Wirtschaftslehre", "Vorsitz", ":fachschaften:wirtschaftslehre_in_nicht_kaufmaennischen_klassen", unterrichts.Fachschaften(lehrers, new List<string>() { "WL", "WBL" }), anrechnungs));
+                teams.Add(new Team("Fachschaft Sport", "Fachschaft Sport", "Vorsitz", ":fachschaften:sport", unterrichts.Fachschaften(lehrers, new List<string>() { "SP", "SP G1", "SP G2" }), anrechnungs));
+                teams.Add(new Team("Fachschaft Biologie", "Fachschaft Biologie", "Vorsitz", ":fachschaften:biologie", unterrichts.Fachschaften(lehrers, new List<string>() { "BI", "Bi", "Bi FU", "Bi1", "Bi G1", "Bi G2", "BI G1", "BI L1" }), anrechnungs));
                 teams.Add(new Team("Kollegium", "Kollegium", "Schulleiter", ":Kollegium", lehrers, anrechnungs));
                 teams.Add(new Team("Bildungsgangleitungen", "Bildungsgangleitungen", "", "Bildungsgangleitung", anrechnungs.LuL(lehrers, "Bildungsgangleitung"), anrechnungs));
                 teams.Add(new Team("Erweiterte Schulleitung", "Erweiterte Schulleitung", "", "Erweiterte Schulleitung", anrechnungs.LuL(lehrers, "Erweiterte Schulleitung"), anrechnungs));
                 teams.Add(new Team("Lehrerinnen", "Lehrerinnen", "Ansprechpartnerin für Gleichstellung", ":ansprechpartnerin_fuer_gleichstellung", lehrers.Lehrerinnen(), anrechnungs));
                 teams.Add(new Team("Berufliches Gymnasium", "G", "Bereichsleitung", ":berufliches_gymnasium:start", unterrichts.Abitur(lehrers), anrechnungs));
+                teams.Add(new Team("Berufliches Gymnasium 13er", "G13", "Bereichsleitung", ":berufliches_gymnasium:start", unterrichts.AbiturNur13er(lehrers), anrechnungs));
                 teams.Add(new Team("Verbindungslehrkräfte", "SV", "", ":verbindungslehrkraefte", anrechnungs.LuL(lehrers, "Verbindungslehrkräfte"), anrechnungs));
                 teams.Add(new Team("Referendare", "Referendare", "", ":referendar_innen", lehrers.Referendare(), anrechnungs));
                 teams.Add(new Team("Klassenleitungen", "Klassenleitungen", "", ":geschaeftsverteilungsplan:klassenleitungen", klasses.GetKlassenleitungen(lehrers), anrechnungs));
-                teams.Add(new Team("FHR", "FHR", "Bereichsleitung", ":fhr", unterrichts.Fhr(lehrers), anrechnungs));
+                teams.Add(new Team("FHR", "FHR", "", ":fhr", unterrichts.Fhr(lehrers), anrechnungs));
 
                 // Täglicher Abgleich:
 

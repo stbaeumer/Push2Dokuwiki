@@ -42,6 +42,10 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
 
                         if (Global.SafeGetString(sqlDataReader, 1) != bildungsgang.Kurzname)
                         {
+                            if (bildungsgang.Kurzname== "BT")
+                            {
+                                string aaa = "";
+                            }
                             if (!(from t in this where t.Kurzname == bildungsgang.Kurzname select t).Any())
                             {   
                                 bildungsgang.Langname = Global.SafeGetString(sqlDataReader, 3);
