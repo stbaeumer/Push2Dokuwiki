@@ -42,11 +42,8 @@ namespace Push2Dokuwiki
                 var untisUnterrichts = new Unterrichts(sourceExportLessons);
                 var untisGruppen = new Gruppen(sourceStudentgroupStudents);
 
-                Teams teams = new Teams();                
-                //teams.AddRange(new Teams(klasses, lehrers, schuelers, unterrichts, "Bildungsgang"));
-                //teams.AddRange(new Teams(klasses, lehrers, schuelers, unterrichts, "Klasse"));
-
-                
+                Teams teams = new Teams();
+                                
                 teams.AddRange(new Teams(bildungsgangs));
                 teams.Add(new Team("Fachschaft Englisch", "Fachschaft Englisch", "Vorsitz", ":fachschaften:deutsch_kommunikation", unterrichts.Fachschaften(lehrers, new List<string>() { "E", "E FU", "E1", "E2", "E G1", "E G2", "E L1", "E L2", "E L", "EL", "EL1", "EL2" }), anrechnungs));
                 teams.Add(new Team("Fachschaft Religion", "Fachschaft Religion", "Vorsitz", ":fachschaften:religionslehre", unterrichts.Fachschaften(lehrers, new List<string>() { "KR", "KR FU", "KR1", "KR2", "KR G1", "KR G2", "ER", "ER G1" }), anrechnungs));

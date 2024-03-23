@@ -217,6 +217,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
                 string klassenleitungen = "";
                 string faecher = "";
                 string bildungsgaenge = "";
+                string bereichsleitung = "";
                 var interessen = "";
 
                 // Auf Fächer prüfen
