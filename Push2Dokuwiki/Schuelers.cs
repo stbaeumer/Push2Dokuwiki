@@ -818,7 +818,7 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                 File.AppendAllText(lokalerPfad + klasse + ".txt", "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine);
 
                 File.AppendAllText(lokalerPfad + klasse + ".txt", "" + Environment.NewLine);
-                File.AppendAllText(lokalerPfad + klasse + ".txt", "{{tag>Notenlisten}}" + Environment.NewLine);
+                
                 Global.DateiTauschen(sqlPfad + klasse + ".txt", lokalerPfad + klasse + ".txt");
                 //break;
             }
@@ -860,7 +860,7 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
             File.AppendAllText(reliabwaehlerNeu, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine);
 
             File.AppendAllText(reliabwaehlerNeu, "" + Environment.NewLine);
-            File.AppendAllText(reliabwaehlerNeu, "{{tag>Religionslehre}}" + Environment.NewLine);
+            
 
             Global.DateiTauschen(dokuwikipfadUndDatei, reliabwaehlerNeu);
         }

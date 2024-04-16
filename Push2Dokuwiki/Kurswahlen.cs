@@ -465,7 +465,7 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
             File.AppendAllText(belegungslisteNeu, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine);
 
             File.AppendAllText(belegungslisteNeu, "" + Environment.NewLine);
-            File.AppendAllText(belegungslisteNeu, "{{tag>Berufliches_Gymnasium Abitur}}" + Environment.NewLine);
+            
 
             Global.DateiTauschen(dokuwikipfadUndDatei, belegungslisteNeu);
         }

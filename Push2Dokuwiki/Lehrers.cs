@@ -396,7 +396,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
             File.AppendAllText(kollegiumNeu, "" + Environment.NewLine);
             File.AppendAllText(kollegiumNeu, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine);
 
-            File.AppendAllText(kollegiumNeu, "{{tag>Zuständigkeiten Personal Klassenleitung}}" + Environment.NewLine);
+            
 
             Global.DateiTauschen(dokuwikiPfadUndDatei, kollegiumNeu);
         }
@@ -567,7 +567,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
             File.AppendAllText(sprechtagNeu, "Klassenleitungen finden die Einladung als Kopiervorlage im [[sharepoint>:f:/s/Kollegium2/EjakJvXmitdCkm_iQcqOTLwB-9EWV5uqXE8j3BrRzKQQAw?e=OwxG0N|Sharepoint]].\r\n" + Environment.NewLine);
 
             File.AppendAllText(sprechtagNeu, Environment.NewLine);
-            File.AppendAllText(sprechtagNeu, "{{tag>Termine}}" + Environment.NewLine);
+            
             
 
             if (Global.DateiTauschen(dateiSprechtag, sprechtagNeu))
