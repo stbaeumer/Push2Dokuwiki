@@ -12,6 +12,7 @@ namespace Push2Dokuwiki
         public string BildungsgangGekürzt { get; internal set; }
         public string WikiLink { get; internal set; }
         public string Stufe { get; internal set; }
-        public string Schule { get; private set; }        
+        public string Schule { get; private set; }
+        public Abwesenheiten Abwesenheiten { get; internal set; }
     }
 }

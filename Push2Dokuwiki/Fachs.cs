@@ -38,7 +38,6 @@ WHERE Subjects.Schoolyear_id = " + Global.AktSj[0] + Global.AktSj[1] + " AND Sub
                         this.Add(fach);
                     };
 
-
                     sqlDataReader.Close();
                 }
                 catch (Exception ex)

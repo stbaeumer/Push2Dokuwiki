@@ -11,27 +11,32 @@ namespace Push2Dokuwiki
     public class Unterrichts : List<Unterricht>
     {
         private string sourceExportLessons;
+        private DateTime dateTime;
 
         public Unterrichts()
         {
         }
 
-        public Unterrichts(string sourceExportLessons)
+        public Unterrichts(string kriterium, DateTime dateTime)
         {
-            using (StreamReader reader = new StreamReader(sourceExportLessons))
+            string datei = "";
+
+            try
             {
-                var überschrift = reader.ReadLine();
-                int i = 1;
+                datei = Global.CheckFile(kriterium, dateTime);
 
-                while (true)
+                using (StreamReader reader = new StreamReader(datei))
                 {
-                    i++;
-                    Unterricht unterricht = new Unterricht();
+                    var überschrift = reader.ReadLine();
+                    int i = 1;
 
-                    string line = reader.ReadLine();
-
-                    try
+                    while (true)
                     {
+                        i++;
+                        Unterricht unterricht = new Unterricht();
+
+                        string line = reader.ReadLine();
+
                         if (line != null)
                         {
                             var x = line.Split('\t');
@@ -50,22 +55,28 @@ namespace Push2Dokuwiki
                             unterricht.Enddate = DateTime.ParseExact(x[8], "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
                             this.Add(unterricht);
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        throw ex;
-                    }
 
-                    if (line == null)
-                    {
-                        break;
+                        if (line == null)
+                        {
+                            break;
+                        }
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                Global.WriteLine("Unterrichte ........... " + datei.Substring((datei.LastIndexOf("\\")) + 1), this.Count);                
+            }
         }
 
-        public Unterrichts(int periode, Klasses klasses, Lehrers lehrers, Fachs fachs, Raums raums, Unterrichtsgruppes unterrichtsgruppes)
+        public Unterrichts(int periode, Klasses klasses, Lehrers lehrers, Fachs fachs, Raums raums)
         {
+            Unterrichtsgruppes unterrichtsgruppes = new Unterrichtsgruppes();
+
             int kalenderwoche = GetCalendarWeek(DateTime.Now);
 
             DateTime datumMontagDerKalenderwoche = GetMondayDateOfWeek(kalenderwoche, DateTime.Now.Year);
@@ -288,8 +299,6 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND ((TERM_I
                             }
                         }
                     }
-                    Global.WriteLine("Unterrichte", this.Count);
-
                     sqlDataReader.Close();
                 }
                 catch (Exception ex)
@@ -300,10 +309,11 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND ((TERM_I
                 finally
                 {
                     odbcConnection.Close();
+                    Global.WriteLine("Unterrichte", this.Count);
                 }
             }
         }
-
+        
         internal List<Lehrer> Fhr(Lehrers lehrers)
         {
             var members = new Lehrers();

@@ -3,11 +3,17 @@ using System.Collections.Generic;
 using System.Data.OleDb;
 using System.Data.SqlClient;
 using System.IO;
+using System.Linq;
 
 namespace Push2Dokuwiki
 {
     public static class Global
     {
+        public static string User = System.Security.Principal.WindowsIdentity.GetCurrent().Name.ToUpper().Split('\\')[1];
+
+        public static string Dateipfad = @"\\fs01\Wiki\push2dokuwiki-seiten\";
+        public static string DateipfadNeu = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + "\\";
+
         public const string ConnectionStringUntis = @"Data Source=SQL01\UNTIS;Initial Catalog=master;Integrated Security=True";
         public const string ConnectionStringAtlantis = @"Dsn=Atlantis17u;uid=DBA";
 
@@ -154,39 +160,142 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
 
         internal static void WriteLine(string v, int count)
         {
-            Console.WriteLine((v + " " + ".".PadRight(count / 150, '.')).PadRight(93, '.') + (" " + count).ToString().PadLeft(6), '.');
+            Console.WriteLine((v + " " + ".".PadRight(count / 170, '.')).PadRight(105, '.') + (" " + count).ToString().PadLeft(6), '.');
         }
 
         internal static void WriteLine(string v, string go)
         {
-            Console.WriteLine((v + " " + ".".PadRight(100 / 150, '.')).PadRight(93, '.') + go.PadLeft(6), '.');
+            Console.WriteLine(((v + " " + ".").PadRight(111, '.')).Substring(0,111-go.Length -3) + "   " + go);
         }
 
-        internal static bool DateiTauschen(string dokuwikiPfadUndDatei, string dateiNeu)
+        internal static void Dateischreiben(string name, string datei, string dateiTemp)
         {
-            if (File.Exists(dokuwikiPfadUndDatei) && File.Exists(dateiNeu))
+            if (File.Exists(datei) && File.Exists(dateiTemp))
             {
                 // Lese den Inhalt der Dateien
-                string contentAlt = File.ReadAllText(dokuwikiPfadUndDatei);
-                string contentNeu = File.ReadAllText(dateiNeu);
+                string contentAlt = File.ReadAllText(datei);
+                string contentNeu = File.ReadAllText(dateiTemp);
 
                 // Vergleiche die Inhalte der Dateien
                 if (contentAlt != contentNeu)
                 {
                     // Überschreibe alt mit dem Inhalt von neu
-                    File.WriteAllText(dokuwikiPfadUndDatei, contentNeu);
-                    Console.WriteLine(dokuwikiPfadUndDatei + " wurde mit " + dateiNeu + " überschrieben.");
-                    return true;
+                    File.WriteAllText(datei, contentNeu);
+                    Console.WriteLine(datei.Substring((datei.LastIndexOf("\\")) + 1) + ": " + dateiTemp + " überschrieben.");
                 }
                 else
                 {
-                    var l = dokuwikiPfadUndDatei.Length;
-                    var ll = dateiNeu.Length;
-                    Console.WriteLine(dokuwikiPfadUndDatei.Substring(0,10) +"..." + dokuwikiPfadUndDatei.Substring(l-25, 25) + " und " + dateiNeu.Substring(0,10) + "..." + dateiNeu.Substring(ll-25,25) + " sind identisch. Keine Änderungen vorgenommen.");
-                    return false;
+                    Global.WriteLine(name, datei.Substring((datei.LastIndexOf("\\")) + 1) + ": Alte und neue Datei sind identisch. Keine Änderungen vorgenommen.");
                 }
             }
-            return false;
+            else
+            {
+                File.Copy(datei, dateiTemp, true);
+                Global.WriteLine(name, datei.Substring((datei.LastIndexOf("\\")) + 1) + ": Datei neu erstellt.");
+            }
+        }
+
+        public static string InsertLineBreaks(string text, int maxLineLength)
+        {
+            if (string.IsNullOrEmpty(text) || maxLineLength <= 0)
+                return text;
+
+            int currentIndex = 0;
+            int length = text.Length;
+            System.Text.StringBuilder result = new System.Text.StringBuilder();
+
+            while (currentIndex < length)
+            {
+                // Calculate the length of the next segment
+                int nextSegmentLength = Math.Min(maxLineLength, length - currentIndex);
+                // Append the segment and a line break
+                result.Append(text.Substring(currentIndex, nextSegmentLength));
+                result.Append(Environment.NewLine);
+                // Move to the next segment
+                currentIndex += nextSegmentLength;
+            }
+
+            return result.ToString();
+        }
+
+        public static string CheckFile(string kriterium, DateTime zeitpunkt)
+        {
+            var sourceFile = (from f in Directory.GetFiles(@"c:\users\" + Global.User + @"\Downloads", "*.csv", SearchOption.AllDirectories) where f.Contains(kriterium) orderby File.GetLastWriteTime(f) select f).LastOrDefault();
+
+            if ((sourceFile == null))
+            {
+                Console.WriteLine("");
+                Console.WriteLine(" Die " + kriterium + "<...>.csv" + (sourceFile == null ? " existiert nicht im Download-Ordner" : " im Download-Ordner ist nicht von heute. \n Es werden keine Daten aus der Datei importiert") + ".");
+                Console.WriteLine(" Exportieren Sie die Datei frisch aus Webuntis, indem Sie als Administrator:");
+
+                if (kriterium.Contains("Student_"))
+                {
+                    Console.WriteLine("   1. Stammdaten > Schülerinnen");
+                    Console.WriteLine("   2. \"Berichte\" auswählen");
+                    Console.WriteLine("   3. Bei \"Schüler\" auf CSV klicken");
+                    Console.WriteLine("   4. Die Datei \"Student_<...>.CSV\" im Download-Ordner zu speichern");
+                    Console.WriteLine(" ");
+                    Console.WriteLine(" ENTER beendet das Programm.");
+                    Console.ReadKey();
+                    Environment.Exit(0);
+                }
+                else
+                {
+                    if (kriterium.Contains("MarksPerLesson") || kriterium.Contains("AbsencePerStudent"))
+                    {
+                        Console.WriteLine("   1. Klassenbuch > Berichte klicken");
+
+                        if (kriterium.Contains("MarksPerLesson"))
+                        {
+                            Console.WriteLine("   2. Alle Klassen auswählen und ggfs. den Zeitraum einschränken");
+                            Console.WriteLine("   3. Unter \"Noten\" die Prüfungsart (-Alle-) auswählen");
+                            Console.WriteLine("   4. Unter \"Noten\" den Haken bei Notennamen ausgeben _NICHT_ setzen");
+                            Console.WriteLine("   5. Hinter \"Noten pro Schüler\" auf CSV klicken");
+                            Console.WriteLine("   6. Die Datei \"MarksPerLesson<...>.CSV\" im Download-Ordner zu speichern");
+                        }
+                        else 
+                        {
+                            Console.WriteLine("   2. Alle Klassen auswählen und als Zeitraum am besten die letzen vier Wochen wählen.");
+                            Console.WriteLine("   3. Unter \"Abwesenheiten\" Fehlzeiten pro Schüler*in auswählen");
+                            Console.WriteLine("   4. \"pro Tag\" ");
+                            Console.WriteLine("   5. Auf CSV klicken");
+                        }
+                        
+                        Console.WriteLine(" ");
+                        Console.WriteLine(" ENTER beendet das Programm.");
+                        Console.ReadKey();
+                        Environment.Exit(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("   1. Administration > Export klicken");
+                        Console.WriteLine("   2. Zeitraum begrenzen, also die Woche der Zeugniskonferenz und vergange Abschnitte herauslassen");
+                        Console.WriteLine("   2. Das CSV-Icon hinter Gesamtfehlzeiten klicken");
+                    }
+
+                    if (kriterium.Contains("AbsenceTimesTotal"))
+                    {
+                        Console.WriteLine("   4. Die Gesamtfehlzeiten (\"AbsenceTimesTotal<...>.CSV\") im Download-Ordner zu speichern");
+                        Console.WriteLine("WICHTIG: Es kann Sinn machen nur Abwesenheiten bis zur letzten Woche in Webuntis auszuwählen.");
+                    }
+
+                    if (kriterium.Contains("StudentgroupStudents"))
+                    {
+                        Console.WriteLine("   4. Die Schülergruppen  (\"StudentgroupStudents<...>.CSV\") im Download-Ordner zu speichern");
+                    }
+
+                    if (kriterium.Contains("ExportLessons"))
+                    {
+                        Console.WriteLine("   4. Die Unterrichte (\"ExportLessons<...>.CSV\") im Download-Ordner zu speichern");
+                    }
+                }
+
+                Console.WriteLine(" ");
+                sourceFile = null;
+                Console.ReadKey(true);
+            }
+
+            return sourceFile;
         }
     }
 }

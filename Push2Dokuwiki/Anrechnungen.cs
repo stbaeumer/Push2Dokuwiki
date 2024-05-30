@@ -173,8 +173,9 @@ ORDER BY CountValue.TEACHER_ID;
                         }
                     }
                 }
-            }            
-            Console.WriteLine("Keine Bildungsgangleitung bei " + bildungsgang.Kurzname + ". Stimmt der Text in der Anrechnung mit dem Langnamen in den Klassenstammdaten überein? Im Text der Anrechnung muss das Wort Bildungsgangleitung in Klammern stehen. Zusätzlich muss der Langname der Klassen im Text der Anrechnungen enthalten sein.");
+            }
+            var x = "Keine Bildungsgangleitung bei " + bildungsgang.Kurzname + ". Stimmt der Text in der Anrechnung mit dem Langnamen in den Klassenstammdaten überein? Im Text der Anrechnung muss das Wort Bildungsgangleitung in Klammern stehen. Zusätzlich muss der Langname der Klassen im Text der Anrechnungen enthalten sein.";
+            Console.WriteLine(Global.InsertLineBreaks(x,77));
             return null;
         }
 

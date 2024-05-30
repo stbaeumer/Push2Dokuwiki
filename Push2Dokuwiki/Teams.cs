@@ -9,6 +9,9 @@ namespace Push2Dokuwiki
     public class Teams : List<Team>
     {
         private Anrechnungs anrechnungen;
+        private Lehrers lehrers;
+        private Unterrichts unterrichts;
+        private Anrechnungs anrechnungs;
 
         public Teams(Klasses klasses, Lehrers lehrers, Schuelers schuelers, Unterrichts unterrichts, string klasseOderBg)
         {
@@ -65,7 +68,7 @@ namespace Push2Dokuwiki
                         }
 
                         team.Schuelers = (from s in schuelers
-                                          where s.Klasse == klasse.NameUntis
+                                          where s.Klasse.NameUntis == klasse.NameUntis
                                           select s).ToList();
 
                         if (team.Members.Count() > 0)
@@ -84,18 +87,16 @@ namespace Push2Dokuwiki
             }
         }
 
-        internal void DateiPraktiumErzeugen()
+        internal void DateiPraktiumErzeugen(string tempdatei)
         {
-            string dateiPraktikum = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\\Praktikum.txt";
-
-            if (File.Exists(dateiPraktikum))
-            {
-                File.Delete(dateiPraktikum);
-            }
+            var datei = Global.Dateipfad + tempdatei;
+            int lastSlashIndex = tempdatei.LastIndexOf('\\');
+            string result = (lastSlashIndex != -1) ? tempdatei.Substring(lastSlashIndex + 1) : tempdatei;
+            tempdatei = System.IO.Path.GetTempPath() + result;
 
             string schuelerName = "";
 
-            File.WriteAllText(dateiPraktikum, "====== Praktikumsbetreuung ======" + Environment.NewLine);
+            File.WriteAllText(datei, "====== Praktikumsbetreuung ======" + Environment.NewLine);
 
             foreach (var teamSoll in (from t in this where t.Kategorie == "Klasse" select t).ToList())
             {
@@ -124,11 +125,11 @@ teamSoll.Langname.StartsWith("HB")))
                 }
             }
 
-            File.AppendAllText(dateiPraktikum, "" + Environment.NewLine);
-            File.AppendAllText(dateiPraktikum, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine);
+            File.AppendAllText(datei, "" + Environment.NewLine);
+            File.AppendAllText(datei, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine);
 
-            File.AppendAllText(dateiPraktikum, schuelerName + Environment.NewLine);
-            Process.Start("notepad++.exe", dateiPraktikum);
+            File.AppendAllText(datei, schuelerName + Environment.NewLine);
+            Process.Start("notepad++.exe", datei);
         }
                 
         public Teams(Bildungsgangs bildungsgangs)
@@ -151,13 +152,37 @@ teamSoll.Langname.StartsWith("HB")))
         {
         }
 
-        internal void DateiGruppenUndMitgliederErzeugen(string dokuwikipfadUndDatei, string dateiGruppenUndMitgliederNeu)
+        public Teams(Bildungsgangs bildungsgangs, Lehrers lehrers, Unterrichts unterrichts, Anrechnungs anrechnungs, Klasses klasses)
         {
+            this.AddRange(new Teams(bildungsgangs));
+            this.Add(new Team("Fachschaft Englisch", "Fachschaft Englisch", "Vorsitz", ":fachschaften:deutsch_kommunikation", unterrichts.Fachschaften(lehrers, new List<string>() { "E", "E FU", "E1", "E2", "E G1", "E G2", "E L1", "E L2", "E L", "EL", "EL1", "EL2" }), anrechnungs));
+            this.Add(new Team("Fachschaft Religion", "Fachschaft Religion", "Vorsitz", ":fachschaften:religionslehre", unterrichts.Fachschaften(lehrers, new List<string>() { "KR", "KR FU", "KR1", "KR2", "KR G1", "KR G2", "ER", "ER G1" }), anrechnungs));
+            this.Add(new Team("Fachschaft Mathematik", "Fachschaft Mathematik", "Vorsitz", ":fachschaften:mathematik_physik", unterrichts.Fachschaften(lehrers, new List<string>() { "M", "M FU", "M1", "M2", "M G1", "M G2", "M L1", "M L2", "M L", "ML", "ML1", "ML2" }), anrechnungs));
+            this.Add(new Team("Fachschaft Politik", "Fachschaft Politik", "Vorsitz", ":fachschaften:politik_gesellschaftslehre", unterrichts.Fachschaften(lehrers, new List<string>() { "PK", "PK FU", "PK1", "PK2", "GG G1", "GG G2" }), anrechnungs));
+            this.Add(new Team("Fachschaft Wirtschaftslehre", "Fachschaft Wirtschaftslehre", "Vorsitz", ":fachschaften:wirtschaftslehre_in_nicht_kaufmaennischen_klassen", unterrichts.Fachschaften(lehrers, new List<string>() { "WL", "WBL" }), anrechnungs));
+            this.Add(new Team("Fachschaft Sport", "Fachschaft Sport", "Vorsitz", ":fachschaften:sport", unterrichts.Fachschaften(lehrers, new List<string>() { "SP", "SP G1", "SP G2" }), anrechnungs));
+            this.Add(new Team("Fachschaft Biologie", "Fachschaft Biologie", "Vorsitz", ":fachschaften:biologie", unterrichts.Fachschaften(lehrers, new List<string>() { "BI", "Bi", "Bi FU", "Bi1", "Bi G1", "Bi G2", "BI G1", "BI L1" }), anrechnungs));
+            this.Add(new Team("Kollegium", "Kollegium", "Schulleiter", ":Kollegium", lehrers, anrechnungs));
+            this.Add(new Team("Bildungsgangleitungen", "Bildungsgangleitungen", "", "Bildungsgangleitung", anrechnungs.LuL(lehrers, "Bildungsgangleitung"), anrechnungs));
+            this.Add(new Team("Erweiterte Schulleitung", "Erweiterte Schulleitung", "", "Erweiterte Schulleitung", anrechnungs.LuL(lehrers, "Erweiterte Schulleitung"), anrechnungs));
+            this.Add(new Team("Lehrerinnen", "Lehrerinnen", "Ansprechpartnerin für Gleichstellung", ":ansprechpartnerin_fuer_gleichstellung", lehrers.Lehrerinnen(), anrechnungs));
+            this.Add(new Team("Berufliches Gymnasium", "G", "Bereichsleitung", ":berufliches_gymnasium:start", unterrichts.Abitur(lehrers), anrechnungs));
+            this.Add(new Team("Berufliches Gymnasium 13er", "G13", "Bereichsleitung", ":berufliches_gymnasium:start", unterrichts.AbiturNur13er(lehrers), anrechnungs));
+            this.Add(new Team("Verbindungslehrkräfte", "SV", "", ":verbindungslehrkraefte", anrechnungs.LuL(lehrers, "Verbindungslehrkräfte"), anrechnungs));
+            this.Add(new Team("Referendare", "Referendare", "", ":referendar_innen", lehrers.Referendare(), anrechnungs));
+            this.Add(new Team("Klassenleitungen", "Klassenleitungen", "", ":geschaeftsverteilungsplan:klassenleitungen", klasses.GetKlassenleitungen(lehrers), anrechnungs));
+            this.Add(new Team("FHR", "FHR", "", ":fhr", unterrichts.Fhr(lehrers), anrechnungs));
+        }
+
+        internal void DateiGruppenUndMitgliederErzeugen(string datei)
+        {
+            datei = Global.DateipfadNeu + datei;
+
             string hyperlink = "";
             
-            File.WriteAllText(dateiGruppenUndMitgliederNeu, "====== Gruppen & Mitglieder ======" + Environment.NewLine);
-            File.AppendAllText(dateiGruppenUndMitgliederNeu, "  Bitte diese Seite nicht manuell ändern." + Environment.NewLine);
-            File.AppendAllText(dateiGruppenUndMitgliederNeu, "Siehe auch [[:kollegium|Kollegium]]." + Environment.NewLine);
+            File.WriteAllText(datei, "====== Gruppen & Mitglieder ======" + Environment.NewLine);
+            File.AppendAllText(datei, "  Bitte diese Seite nicht manuell ändern." + Environment.NewLine);
+            File.AppendAllText(datei, "Siehe auch [[:kollegium|Kollegium]]." + Environment.NewLine);
 
             foreach (var team in (from t in this
                                   where t.Langname != null
@@ -212,26 +237,26 @@ teamSoll.Langname.StartsWith("HB")))
 
                     string namensraum = ":" + team.Langname;
 
-                    File.AppendAllText(dateiGruppenUndMitgliederNeu, "===== " + team.Langname + (team.Langname== team.Kurzname ? "": " (" + team.Kurzname+")") + " =====" + Environment.NewLine);
+                    File.AppendAllText(datei, "===== " + team.Langname + (team.Langname== team.Kurzname ? "": " (" + team.Kurzname+")") + " =====" + Environment.NewLine);
 
-                    File.AppendAllText(dateiGruppenUndMitgliederNeu, "[[:" + team.WikiLink + "|" + team.Langname + "]]" + Environment.NewLine);
+                    File.AppendAllText(datei, "[[:" + team.WikiLink + "|" + team.Langname + "]]" + Environment.NewLine);
 
                     if (team.Leitung != null)
                     {
-                        File.AppendAllText(dateiGruppenUndMitgliederNeu, Environment.NewLine + team.Leitungsbezeichnung + ": [[" + team.Leitung.Mail + "|" + team.Leitung.Vorname + " " + team.Leitung.Nachname + "]]" + Environment.NewLine);
+                        File.AppendAllText(datei, Environment.NewLine + team.Leitungsbezeichnung + ": [[" + team.Leitung.Mail + "|" + team.Leitung.Vorname + " " + team.Leitung.Nachname + "]]" + Environment.NewLine);
                     }
-                    File.AppendAllText(dateiGruppenUndMitgliederNeu, "| " + mitgliederNachname + "|" + mitgliederMail + " |" + Environment.NewLine);
+                    File.AppendAllText(datei, "| " + mitgliederNachname + "|" + mitgliederMail + " |" + Environment.NewLine);
                 }
                 catch (Exception ex)
                 {
                     throw ex;
                 }
             }
-            File.AppendAllText(dateiGruppenUndMitgliederNeu, "" + Environment.NewLine);
-            File.AppendAllText(dateiGruppenUndMitgliederNeu, "" + Environment.NewLine);
-            File.AppendAllText(dateiGruppenUndMitgliederNeu, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine);
+            File.AppendAllText(datei, "" + Environment.NewLine);
+            File.AppendAllText(datei, "" + Environment.NewLine);
+            File.AppendAllText(datei, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine);
 
-            Global.DateiTauschen(dokuwikipfadUndDatei, dateiGruppenUndMitgliederNeu);
+            Global.Dateischreiben("sdfee", datei, datei);
         }
 
         internal void Hinzufügen(Teams teams)

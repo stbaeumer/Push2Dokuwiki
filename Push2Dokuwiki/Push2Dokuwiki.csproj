@@ -42,6 +42,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Abwesenheit.cs" />
+    <Compile Include="Abwesenheiten.cs" />
     <Compile Include="Anrechnung.cs" />
     <Compile Include="Anrechnungen.cs" />
     <Compile Include="Anrechnungsgrund.cs" />
@@ -56,6 +58,8 @@
     <Compile Include="Fachs.cs" />
     <Compile Include="Fachschaft.cs" />
     <Compile Include="Fachschaften.cs" />
+    <Compile Include="Ferien.cs" />
+    <Compile Include="Feriens.cs" />
     <Compile Include="Global.cs" />
     <Compile Include="Gruppe.cs" />
     <Compile Include="Gruppen.cs" />
@@ -66,6 +70,8 @@
     <Compile Include="Kurswahlen.cs" />
     <Compile Include="Lehrer.cs" />
     <Compile Include="Lehrers.cs" />
+    <Compile Include="Maßnahme.cs" />
+    <Compile Include="Maßnahmen.cs" />
     <Compile Include="Periode.cs" />
     <Compile Include="Periodes.cs" />
     <Compile Include="Program.cs" />
@@ -80,6 +86,8 @@
     <Compile Include="Unterrichts.cs" />
     <Compile Include="Unterrichtsgruppe.cs" />
     <Compile Include="Unterrichtsgruppes.cs" />
+    <Compile Include="Vorgang.cs" />
+    <Compile Include="Vorgänge.cs" />
     <Compile Include="ZeitUndOrt.cs" />
     <Compile Include="ZeitUndOrts.cs" />
   </ItemGroup>

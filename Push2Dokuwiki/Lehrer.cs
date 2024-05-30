@@ -73,11 +73,11 @@ namespace Push2Dokuwiki
             return null;
         }
 
-        internal int GetAlterAmErstenSchultagDiesesJahres(int aktSj)
+        internal int GetAlterAmErstenSchultagDiesesJahres()
         {
-            int years = (2000+aktSj) - Geburtsdatum.Year;
+            int years = Convert.ToInt32(Global.AktSj[0]) - Geburtsdatum.Year;
             DateTime birthday = Geburtsdatum.AddYears(years);
-            if (new DateTime(2000 + aktSj, 7, 31).CompareTo(birthday) < 0) { years--; }
+            if (new DateTime(2000 + Convert.ToInt32(Global.AktSj[0]), 7, 31).CompareTo(birthday) < 0) { years--; }
             return years;
         }
 
@@ -94,15 +94,18 @@ namespace Push2Dokuwiki
             {
                 if (ProzentStelle >= 96 && AusgeschütteteAltersermäßigung != 3)
                 {
-                    Console.WriteLine(Kürzel + " war zu Beginn des SJ " + AlterAmErstenSchultagDiesesJahres + " alt und müsste mit einer " + ProzentStelle + "%-Stelle 3 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.");
+                    var x = " " + Kürzel + " war zu Beginn des SJ " + AlterAmErstenSchultagDiesesJahres + " alt und müsste mit einer " + ProzentStelle + "%-Stelle 3 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.";
+                    Console.WriteLine(Global.InsertLineBreaks(x, 77));
                 }
                 if (ProzentStelle >= 75 && ProzentStelle < 96 && AusgeschütteteAltersermäßigung != 2)
                 {
-                    Console.WriteLine(Kürzel + " war zu Beginn des SJ " + AlterAmErstenSchultagDiesesJahres + " alt und müsste mit einer " + ProzentStelle + "%-Stelle 2 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.");
+                    var y = " " + Kürzel + " war zu Beginn des SJ " + AlterAmErstenSchultagDiesesJahres + " alt und müsste mit einer " + ProzentStelle + "%-Stelle 2 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.";
+                    Console.WriteLine(Global.InsertLineBreaks(y, 77));
                 }
                 if (ProzentStelle >= 50 && ProzentStelle < 75 && AusgeschütteteAltersermäßigung != 1.5)
                 {
-                    Console.WriteLine(Kürzel + " war zu Beginn des SJ " + AlterAmErstenSchultagDiesesJahres + " alt und müsste mit einer " + ProzentStelle + "%-Stelle 1.5 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.");
+                    var z = " " + Kürzel + " war zu Beginn des SJ " + AlterAmErstenSchultagDiesesJahres + " alt und müsste mit einer " + ProzentStelle + "%-Stelle 1.5 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.";
+                    Console.WriteLine(Global.InsertLineBreaks(z, 77));
                 }
             }
 
@@ -110,11 +113,13 @@ namespace Push2Dokuwiki
             {
                 if (ProzentStelle == 100 && AusgeschütteteAltersermäßigung != 1)
                 {
-                    Console.WriteLine(Kürzel + " war zu Beginn des SJ " + AlterAmErstenSchultagDiesesJahres + " alt und müsste mit einer " + ProzentStelle + "%-Stelle 1 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.");
+                    var x = " " + Kürzel + " war zu Beginn des SJ " + AlterAmErstenSchultagDiesesJahres + " alt und müsste mit einer " + ProzentStelle + "%-Stelle 1 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.";
+                    Console.WriteLine(Global.InsertLineBreaks(x,77));
                 }
                 if (ProzentStelle >= 50 && ProzentStelle < 100 && AusgeschütteteAltersermäßigung != 0.5)
                 {
-                    Console.WriteLine(Kürzel + " war zu Beginn des SJ " + AlterAmErstenSchultagDiesesJahres + " alt und müsste mit einer " + ProzentStelle + "%-Stelle 0,5 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.");
+                    var y = Kürzel + " war zu Beginn des SJ " + AlterAmErstenSchultagDiesesJahres + " alt und müsste mit einer " + ProzentStelle + "%-Stelle 0,5 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.";
+                    Console.WriteLine(Global.InsertLineBreaks(y,77));
                 }
             }
 
@@ -124,15 +129,18 @@ namespace Push2Dokuwiki
             {
                 if (ProzentStelle >= 96 && AusgeschütteteAltersermäßigung != 3)
                 {
-                    Console.WriteLine(Kürzel + " wird vor Beginn des kommenden SJ " + (AlterAmErstenSchultagDiesesJahres + 1) + " geworden sein und muss mit einer " + ProzentStelle + "%-Stelle 3 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.");
+                    var x = " " + Kürzel + " wird vor Beginn des kommenden SJ " + (AlterAmErstenSchultagDiesesJahres + 1) + " geworden sein und muss mit einer " + ProzentStelle + "%-Stelle 3 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.";
+                    Console.WriteLine(Global.InsertLineBreaks(x,77));
                 }
                 if (ProzentStelle >= 75 && ProzentStelle < 96 && AusgeschütteteAltersermäßigung != 2)
                 {
-                    Console.WriteLine(Kürzel + " wird vor Beginn des kommenden SJ " + (AlterAmErstenSchultagDiesesJahres + 1) + " geworden sein und muss mit einer " + ProzentStelle + "%-Stelle 2 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.");
+                    var x = " " + Kürzel + " wird vor Beginn des kommenden SJ " + (AlterAmErstenSchultagDiesesJahres + 1) + " geworden sein und muss mit einer " + ProzentStelle + "%-Stelle 2 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.";
+                    Console.WriteLine(Global.InsertLineBreaks(x,77));
                 }
                 if (ProzentStelle >= 50 && ProzentStelle < 75 && AusgeschütteteAltersermäßigung != 1.5)
                 {
-                    Console.WriteLine(Kürzel + " wird vor Beginn des kommenden SJ " + (AlterAmErstenSchultagDiesesJahres + 1) + " geworden sein und muss mit einer " + ProzentStelle + "%-Stelle 1.5 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.");
+                    var x = " " + Kürzel + " wird vor Beginn des kommenden SJ " + (AlterAmErstenSchultagDiesesJahres + 1) + " geworden sein und muss mit einer " + ProzentStelle + "%-Stelle 1.5 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.";
+                    Console.WriteLine(Global.InsertLineBreaks(x,77));
                 }
             }
 
@@ -140,11 +148,13 @@ namespace Push2Dokuwiki
             {
                 if (ProzentStelle == 100 && AusgeschütteteAltersermäßigung != 1)
                 {
-                    Console.WriteLine(Kürzel + " wird vor Beginn des kommenden SJ " + (AlterAmErstenSchultagDiesesJahres + 1) + " geworden sein und muss mit einer " + ProzentStelle + "%-Stelle 1 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.");
+                    var x = " " + Kürzel + " wird vor Beginn des kommenden SJ " + (AlterAmErstenSchultagDiesesJahres + 1) + " geworden sein und muss mit einer " + ProzentStelle + "%-Stelle 1 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.";
+                    Console.WriteLine(Global.InsertLineBreaks(x,77));
                 }
                 if (ProzentStelle >= 50 && ProzentStelle < 100 && AusgeschütteteAltersermäßigung != 0.5)
                 {
-                    Console.WriteLine(Kürzel + " wird vor Beginn des kommenden SJ " + (AlterAmErstenSchultagDiesesJahres + 1) + " geworden sein und muss mit einer " + ProzentStelle + "%-Stelle 0,5 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.");
+                    var x = " " + Kürzel + " wird vor Beginn des kommenden SJ " + (AlterAmErstenSchultagDiesesJahres + 1) + " geworden sein und muss mit einer " + ProzentStelle + "%-Stelle 0,5 Std Ermäßigung bekommen statt wie bisher : " + AusgeschütteteAltersermäßigung + " Std.";
+                    Console.WriteLine(Global.InsertLineBreaks(x,77));
                 }
             }
         }

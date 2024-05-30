@@ -131,8 +131,6 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND ((Lesson
                         this.Add(unterrichtsgruppe);
                     };
                     sqlDataReader.Close();
-
-
                 }
                 catch (Exception ex)
                 {

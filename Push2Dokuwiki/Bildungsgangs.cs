@@ -37,17 +37,17 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
                     {
                         Bildungsgang bildungsgang = new Bildungsgang();
                         bildungsgang.Kurzname = string.Concat(Global.SafeGetString(sqlDataReader, 1).TakeWhile(c => c < '0' || c > '9'));
-                        
+
                         // Beim BTeam und anderen "Klassen" ist keine Jahreszahl im Namen. Daraus wird dann kein Bildungsgang erstellt.
 
                         if (Global.SafeGetString(sqlDataReader, 1) != bildungsgang.Kurzname)
                         {
-                            if (bildungsgang.Kurzname== "BT")
+                            if (bildungsgang.Kurzname == "BT")
                             {
                                 string aaa = "";
                             }
                             if (!(from t in this where t.Kurzname == bildungsgang.Kurzname select t).Any())
-                            {   
+                            {
                                 bildungsgang.Langname = Global.SafeGetString(sqlDataReader, 3);
                                 bildungsgang.WikiLink = Global.SafeGetString(sqlDataReader, 7).StartsWith(":") ? Global.SafeGetString(sqlDataReader, 7) : ":" + Global.SafeGetString(sqlDataReader, 7);
                                 bildungsgang.Members = unterrichts.GetMembers(bildungsgang, lehrers, unterrichts);

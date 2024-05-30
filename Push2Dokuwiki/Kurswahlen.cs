@@ -14,59 +14,64 @@ namespace Push2Dokuwiki
 {
     internal class Kurswahlen : List<Kurswahl>
     {
+        private readonly string datei;
+        private readonly List<Schueler> schuelers;
+        private readonly Unterrichts unterrichts;
+        private readonly Lehrers lehrers;
+        private readonly Klasses klasses;
+        private readonly Unterrichts untisUnterrichts;
+        private readonly Gruppen untisGruppen;
+        private readonly string aktJahr;
+        private readonly string hzJz;
+
         public Kurswahlen(
-            string dokuwikipfadUndDatei,
-            string belegungslisteNeu,
+            string datei,
             List<Schueler> schuelers,
             Unterrichts unterrichts,
             Lehrers lehrers,
             Klasses klasses,
             Unterrichts untisUnterrichts,
             Gruppen untisGruppen,
-            int aktJahr,
+            string aktJahr,
             string hzJz
             )
-        {
-            List<string> AktSj = new List<string>
-                {
-                    (DateTime.Now.Month >= 8 ? DateTime.Now.Year : DateTime.Now.Year - 1).ToString(),
-                    (DateTime.Now.Month >= 8 ? DateTime.Now.Year + 1 - 2000 : DateTime.Now.Year - 2000).ToString()
-                };
+        {   
+            datei = Global.DateipfadNeu + datei;
 
-            File.WriteAllText(belegungslisteNeu, "====== Klausurbelegungspläne ======" + Environment.NewLine);
+            File.WriteAllText(datei, "====== Klausurbelegungspläne ======" + Environment.NewLine);
 
-            File.AppendAllText(belegungslisteNeu, Environment.NewLine);
+            File.AppendAllText(datei, Environment.NewLine);
 
-            File.AppendAllText(belegungslisteNeu, "  Bitte diese Seite nicht manuell ändern." + Environment.NewLine);
+            File.AppendAllText(datei, "  Bitte diese Seite nicht manuell ändern." + Environment.NewLine);
 
-            File.AppendAllText(belegungslisteNeu, Environment.NewLine);
+            File.AppendAllText(datei, Environment.NewLine);
 
-            File.AppendAllText(belegungslisteNeu, "Klausurbelegungspläne des[[berufliches_gymnasium:start | Beruflichen Gymnasiums]]. Siehe auch:" + Environment.NewLine);
+            File.AppendAllText(datei, "Klausurbelegungspläne des[[berufliches_gymnasium:start | Beruflichen Gymnasiums]]. Siehe auch:" + Environment.NewLine);
 
-            File.AppendAllText(belegungslisteNeu, "  * [[oeffentlich:klausurplanung_1_halbjahr | Klausurplanung 1.Halbjahr]]" + Environment.NewLine);
-            File.AppendAllText(belegungslisteNeu, "  * [[oeffentlich:klausurplanung_2_halbjahr | Klausurplanung 2.Halbjahr]]" + Environment.NewLine);
-            File.AppendAllText(belegungslisteNeu, Environment.NewLine);
+            File.AppendAllText(datei, "  * [[oeffentlich:klausurplanung_1_halbjahr | Klausurplanung 1.Halbjahr]]" + Environment.NewLine);
+            File.AppendAllText(datei, "  * [[oeffentlich:klausurplanung_2_halbjahr | Klausurplanung 2.Halbjahr]]" + Environment.NewLine);
+            File.AppendAllText(datei, Environment.NewLine);
 
-            File.AppendAllText(belegungslisteNeu, Environment.NewLine);
+            File.AppendAllText(datei, Environment.NewLine);
 
             // 11er
 
             var verschiedene11erKlassen = (from s in schuelers
-                                           where s.Klasse.StartsWith("G")
-                                           where s.Klasse.Contains(aktJahr.ToString())
+                                           where s.Klasse.NameUntis.StartsWith("G")
+                                           where s.Klasse.NameUntis.Contains(aktJahr.ToString())
                                            select s.Klasse).Distinct().ToList();
 
-            File.AppendAllText(belegungslisteNeu, "===== Jahrgang 11 (Belegung aus Webuntis) =====" + Environment.NewLine);
-            File.AppendAllText(belegungslisteNeu, Environment.NewLine);
+            File.AppendAllText(datei, "===== Jahrgang 11 (Belegung aus Webuntis) =====" + Environment.NewLine);
+            File.AppendAllText(datei, Environment.NewLine);
 
             foreach (var klasse in verschiedene11erKlassen)
             {
-                File.AppendAllText(belegungslisteNeu, "====" + klasse + "====" + Environment.NewLine);
-                File.AppendAllText(belegungslisteNeu, Environment.NewLine);
+                File.AppendAllText(datei, "====" + klasse.NameUntis + "====" + Environment.NewLine);
+                File.AppendAllText(datei, Environment.NewLine);
 
                 Schuelers sus = new Schuelers();
                 sus.AddRange(from s in schuelers where s.Klasse == klasse select s);
-                sus.GetWebuntisUnterrichte(untisUnterrichts, untisGruppen, klasse, hzJz, AktSj);
+                sus.GetWebuntisUnterrichte(untisUnterrichts, untisGruppen, klasse.NameUntis, hzJz);
 
                 var verschiedene11erFächer = (from s in sus
                                               from u in s.UnterrichteAusWebuntis
@@ -81,9 +86,9 @@ namespace Push2Dokuwiki
                     kopfzeile2 += fach.Lehrkraft + "  ^  ";
                 }
 
-                File.AppendAllText(belegungslisteNeu, "Jahrgang: 11  |  " + (hzJz == "HZ" ? "1." : "2.") + " Halbjahr  |  Fehler gefunden? ((Fehler müssen in Webuntis korrigiert werden. Anschließend wird die Tabelle automatisch täglich aktualisiert.))" + Environment.NewLine);
-                File.AppendAllText(belegungslisteNeu, kopfzeile1 + Environment.NewLine);
-                File.AppendAllText(belegungslisteNeu, kopfzeile2 + Environment.NewLine);
+                File.AppendAllText(datei, "Jahrgang: 11  |  " + (hzJz == "HZ" ? "1." : "2.") + " Halbjahr  |  Fehler gefunden? ((Fehler müssen in Webuntis korrigiert werden. Anschließend wird die Tabelle automatisch täglich aktualisiert.))" + Environment.NewLine);
+                File.AppendAllText(datei, kopfzeile1 + Environment.NewLine);
+                File.AppendAllText(datei, kopfzeile2 + Environment.NewLine);
 
                 var z = 1;
 
@@ -102,9 +107,9 @@ namespace Push2Dokuwiki
                             zeileSuS += "     | ";
                         }
                     }
-                    File.AppendAllText(belegungslisteNeu, zeileSuS + Environment.NewLine);
+                    File.AppendAllText(datei, zeileSuS + Environment.NewLine);
                 }
-                File.AppendAllText(belegungslisteNeu, Environment.NewLine);
+                File.AppendAllText(datei, Environment.NewLine);
             }
 
 
@@ -296,8 +301,8 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
 
             // 12er und 13er
 
-            File.AppendAllText(belegungslisteNeu, "===== Jahrgang 12 & 13 (Belegung aus Atlantis) =====" + Environment.NewLine);
-            File.AppendAllText(belegungslisteNeu, Environment.NewLine);
+            File.AppendAllText(datei, "===== Jahrgang 12 & 13 (Belegung aus Atlantis) =====" + Environment.NewLine);
+            File.AppendAllText(datei, Environment.NewLine);
 
             var verschiedeneKlassen = (from t in this.OrderBy(x => x.Jahrgang).ThenBy(x => x.Klasse)
                                        where t.Konferenzdatum > new DateTime(Convert.ToInt32(Global.AktSj[0]), 10, 01)
@@ -310,9 +315,9 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
             {
                 foreach (var klasse in verschiedeneKlassen.Where(x => x.StartsWith(bereich.V)))
                 {
-                    File.AppendAllText(belegungslisteNeu, Environment.NewLine);
-                    File.AppendAllText(belegungslisteNeu, "====" + klasse + "====" + Environment.NewLine);
-                    File.AppendAllText(belegungslisteNeu, Environment.NewLine);
+                    File.AppendAllText(datei, Environment.NewLine);
+                    File.AppendAllText(datei, "====" + klasse + "====" + Environment.NewLine);
+                    File.AppendAllText(datei, Environment.NewLine);
 
 
                     var jahrgang = (from t in this.OrderBy(x => x.Nachname).ThenBy(x => x.Vorname) where t.Klasse == klasse select t.Jahrgang).FirstOrDefault();
@@ -321,9 +326,9 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
 
                     var konferenzdatum = (from t in this.OrderBy(x => x.Nachname).ThenBy(x => x.Vorname) where t.Klasse == klasse select t.Konferenzdatum.ToShortDateString()).FirstOrDefault();
 
-                    File.AppendAllText(belegungslisteNeu, "[[" + bereich.WikiLink + " | " + klasse.Substring(0, 2) + " ]]  |  Jahrgang:" + (10 + jahrgang) + "  |  " + (hzJz == "HZ" ? "1." : "2.") + " Halbjahr  |  Konferenzdatum: [[:konferenzen:zeugniskonferenzen|" + konferenzdatum + "]]  |  Gliederung: " + gliederung + "  |  Fehler gefunden? ((Fehler müssen in Atlantis korrigiert werden. Anschließend wird die Tabelle automatisch täglich aktualisiert.))" + Environment.NewLine);
+                    File.AppendAllText(datei, "[[" + bereich.WikiLink + " | " + klasse.Substring(0, 2) + " ]]  |  Jahrgang:" + (10 + jahrgang) + "  |  " + (hzJz == "HZ" ? "1." : "2.") + " Halbjahr  |  Konferenzdatum: [[:konferenzen:zeugniskonferenzen|" + konferenzdatum + "]]  |  Gliederung: " + gliederung + "  |  Fehler gefunden? ((Fehler müssen in Atlantis korrigiert werden. Anschließend wird die Tabelle automatisch täglich aktualisiert.))" + Environment.NewLine);
 
-                    File.AppendAllText(belegungslisteNeu, Environment.NewLine);
+                    File.AppendAllText(datei, Environment.NewLine);
 
                     var schuelerDieserKlasse = (from t in this.OrderBy(x => x.Nachname).ThenBy(x => x.Vorname) where t.Klasse == klasse select t.SchlüsselExtern).Distinct().ToList();
 
@@ -357,9 +362,9 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                     kopfzeile2 += " ^^^^";
                     kopfzeile3 += "12.1^12.2^13.1^13.2^";
 
-                    File.AppendAllText(belegungslisteNeu, kopfzeile1 + Environment.NewLine);
-                    File.AppendAllText(belegungslisteNeu, kopfzeile2 + Environment.NewLine);
-                    File.AppendAllText(belegungslisteNeu, kopfzeile3 + Environment.NewLine);
+                    File.AppendAllText(datei, kopfzeile1 + Environment.NewLine);
+                    File.AppendAllText(datei, kopfzeile2 + Environment.NewLine);
+                    File.AppendAllText(datei, kopfzeile3 + Environment.NewLine);
 
                     int y = 1;
 
@@ -454,20 +459,29 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                                 zeile += "     |";
                             }
                         }
-                        File.AppendAllText(belegungslisteNeu, zeile.TrimEnd(' ') + wahlklausur + Environment.NewLine);
+                        File.AppendAllText(datei, zeile.TrimEnd(' ') + wahlklausur + Environment.NewLine);
                     }
 
-                    File.AppendAllText(belegungslisteNeu, "X: Belegung (ohne Klausur); P: Belegung (mit Pflichtklausur); W: Belegung (mit Wahlklausur); 1,2,3,4: Abiturfächer" + Environment.NewLine);
-                    File.AppendAllText(belegungslisteNeu, "" + Environment.NewLine);
+                    File.AppendAllText(datei, "X: Belegung (ohne Klausur); P: Belegung (mit Pflichtklausur); W: Belegung (mit Wahlklausur); 1,2,3,4: Abiturfächer" + Environment.NewLine);
+                    File.AppendAllText(datei, "" + Environment.NewLine);
                 }
             }
-            File.AppendAllText(belegungslisteNeu, "" + Environment.NewLine);
-            File.AppendAllText(belegungslisteNeu, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine);
+            File.AppendAllText(datei, "" + Environment.NewLine);
+            File.AppendAllText(datei, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine);
 
-            File.AppendAllText(belegungslisteNeu, "" + Environment.NewLine);
-            
+            File.AppendAllText(datei, "" + Environment.NewLine);
 
-            Global.DateiTauschen(dokuwikipfadUndDatei, belegungslisteNeu);
+
+            Global.Dateischreiben("Kurswahlen", this.datei, datei);
+            this.datei = this.datei;
+            this.schuelers = schuelers;
+            this.unterrichts = unterrichts;
+            this.lehrers = lehrers;
+            this.klasses = klasses;
+            this.untisUnterrichts = untisUnterrichts;
+            this.untisGruppen = untisGruppen;
+            this.aktJahr = aktJahr;
+            this.hzJz = hzJz;
         }
 
         public Kurswahlen()

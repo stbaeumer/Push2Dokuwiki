@@ -2,19 +2,18 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Push2Dokuwiki
 {
     public class Periodes : List<Periode>
     {
-        public int AktuellePeriode { get; private set; }
-
         public Periodes()
         {
             SqlConnection sqlConnection;
             sqlConnection = new SqlConnection(Global.ConnectionStringUntis);
-            
+
             try
             {
                 sqlConnection.Open();
@@ -29,7 +28,7 @@ FROM Terms
 WHERE (((Terms.SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ")  AND ((Terms.SCHOOL_ID)=177659)) ORDER BY Terms.TERM_ID;";
 
                 using (SqlCommand sqlCommand = new SqlCommand(queryString, sqlConnection))
-                {                    
+                {
                     SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
 
                     while (sqlDataReader.Read())
@@ -42,10 +41,7 @@ WHERE (((Terms.SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ")  AND (
                             Von = DateTime.ParseExact((sqlDataReader.GetInt32(3)).ToString(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
                             Bis = DateTime.ParseExact((sqlDataReader.GetInt32(4)).ToString(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture)
                         };
-
-                        if (DateTime.Now > periode.Von && DateTime.Now < periode.Bis)
-                            this.AktuellePeriode = periode.IdUntis;
-
+                                                
                         this.Add(periode);
                     };
 
@@ -58,17 +54,6 @@ WHERE (((Terms.SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ")  AND (
 
                     sqlDataReader.Close();
                 }
-
-                if (this.AktuellePeriode == 0)
-                {
-                    Console.WriteLine("Es kann keine aktuelle Periode ermittelt werden. Das ist z. B. während der Sommerferien der Fall.");
-                    Console.WriteLine("Es wird die Periode " + this.Count + " als aktuelle Periode angenommen.");
-                    this.AktuellePeriode = this.Count;
-                }
-                else
-                {
-                    Global.WriteLine("Perioden", this.Count);
-                }
             }
             catch (Exception ex)
             {
@@ -77,7 +62,23 @@ WHERE (((Terms.SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ")  AND (
             finally
             {
                 sqlConnection.Close();
+                Global.WriteLine("Perioden", this.Count);
             }
+        }
+
+        internal int GetAktuellePeriode()
+        {
+            var aktuellePeriode = (from p in this where p.Bis >= DateTime.Now.Date where DateTime.Now.Date >= p.Von select p.IdUntis).FirstOrDefault();
+
+            if (aktuellePeriode == 0)
+            {
+                Console.WriteLine("Es kann keine aktuelle Periode ermittelt werden. Das ist z. B. während der Sommerferien der Fall.");
+            }
+            else
+            {
+                Global.WriteLine("Aktuelle Periode", aktuellePeriode);
+            }
+            return aktuellePeriode;
         }
     }
 }

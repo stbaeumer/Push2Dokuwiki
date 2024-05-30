@@ -88,6 +88,10 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
             }
         }
 
+        public Klasses()
+        {
+        }
+
         internal Lehrers GetKlassenleitungen(Lehrers lehrers)
         {
             var x = new Lehrers();
@@ -137,6 +141,26 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
                 }                
             }
             return members;
+        }
+
+        internal Klasses MitAbwesenheiten(Abwesenheiten abwesenheiten)
+        {
+            var klassenMitAbwesenheiten = new Klasses();
+
+            foreach(var klasse in this)
+            {
+                if ((from a in abwesenheiten where a.Klasse == klasse.NameUntis select a).Any())
+                {
+                    klasse.Abwesenheiten = new Abwesenheiten();
+                    klasse.Abwesenheiten.AddRange((from a in abwesenheiten
+                                                 where a.Klasse == klasse.NameUntis
+                                                 select a).ToList());
+                    klassenMitAbwesenheiten.Add(klasse);
+                }
+            }
+            Console.WriteLine(("Klassen mit Abwesenheiten" + ".".PadRight(klassenMitAbwesenheiten.Count / 150, '.')).PadRight(48, '.') + (" " + klassenMitAbwesenheiten.Count).ToString().PadLeft(4), '.');
+
+            return klassenMitAbwesenheiten;
         }
     }
 }
