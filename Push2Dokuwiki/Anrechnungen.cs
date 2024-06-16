@@ -1,15 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
+using System.Text.RegularExpressions;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Push2Dokuwiki
 {
     public class Anrechnungs : List<Anrechnung>
     {
-        public Anrechnungs(int periode)
+        public Anrechnungs(int periode, Lehrers lehrers)
         {
+            var sj = Global.AktSj[0] + Global.AktSj[1];
+
+            if (DateTime.Now < new DateTime(2024, 08, 1)) 
+            {
+                sj = "20242025";
+            }
+
+
             using (SqlConnection odbcConnection = new SqlConnection(Global.ConnectionStringUntis))
             {
                 Beschreibungs beschreibungs = new Beschreibungs();
@@ -24,7 +35,7 @@ CV_REASON_ID,
 Name, 
 Longname
 FROM CV_Reason
-WHERE (SCHOOLYEAR_ID=" + Global.AktSj[0] + Global.AktSj[1] + @");";
+WHERE (SCHOOLYEAR_ID=" + sj + @");";
 
                     SqlCommand odbcCommand = new SqlCommand(queryString, odbcConnection);
                     odbcConnection.Open();
@@ -61,7 +72,7 @@ DESCRIPTION_ID,
 Name, 
 Longname
 FROM Description
-WHERE (SCHOOLYEAR_ID=" + Global.AktSj[0] + Global.AktSj[1] + @");
+WHERE (SCHOOLYEAR_ID=" + sj + @");
 ";
                     SqlCommand odbcCommand = new SqlCommand(queryString, odbcConnection);
                     odbcConnection.Open();
@@ -103,7 +114,7 @@ CountValue.DateTo,
 CountValue.CV_REASON_ID
 
 FROM CountValue
-WHERE (((CountValue.SCHOOLYEAR_ID)=" + Global.AktSj[0] + Global.AktSj[1] + @") AND ((CountValue.Deleted)='false') AND ((CountValue.Deleted)='false'))
+WHERE (((CountValue.SCHOOLYEAR_ID)=" + sj + @") AND ((CountValue.Deleted)='false') AND ((CountValue.Deleted)='false'))
 ORDER BY CountValue.TEACHER_ID;
 ";
 
@@ -113,17 +124,46 @@ ORDER BY CountValue.TEACHER_ID;
 
                     while (sqlDataReader.Read())
                     {
-                        Anrechnung anrechnung = new Anrechnung()
-                        {
-                            TeacherIdUntis = sqlDataReader.GetInt32(0),
-                            Beschr = (from b in beschreibungs where b.BeschreibungId == sqlDataReader.GetInt32(1) select b.Name).FirstOrDefault() == null ? "" : (from b in beschreibungs where b.BeschreibungId == sqlDataReader.GetInt32(1) select b.Name).FirstOrDefault(),  // Wiki-URL                            
-                            Text = Global.SafeGetString(sqlDataReader, 2) == null ? "" : Global.SafeGetString(sqlDataReader, 2), // Vorsitz etc.                            
-                            Wert = Convert.ToDouble(sqlDataReader.GetInt32(3)) / 100000,
-                            Von = sqlDataReader.GetInt32(4) > 0 ? DateTime.ParseExact((sqlDataReader.GetInt32(4)).ToString(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture) : new DateTime(),
-                            Bis = sqlDataReader.GetInt32(5) > 0 ? DateTime.ParseExact((sqlDataReader.GetInt32(5)).ToString(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture) : new DateTime(),
-                            Grund = Convert.ToInt32((from c in cvreasons where c.Id == sqlDataReader.GetInt32(6) select c.Name).FirstOrDefault())
-                        };
+                        Anrechnung anrechnung = new Anrechnung();
 
+                        anrechnung.TeacherIdUntis = sqlDataReader.GetInt32(0);
+                        
+                        anrechnung.Grund = Convert.ToInt32((from c in cvreasons where c.Id == sqlDataReader.GetInt32(6) select c.Name).FirstOrDefault());
+                        anrechnung.Wert = Convert.ToDouble(sqlDataReader.GetInt32(3)) / 100000;
+
+                        anrechnung.Lehrer = (from l in lehrers where l.IdUntis == sqlDataReader.GetInt32(0) select l).FirstOrDefault();
+
+                        //if (anrechnung.Grund==200)
+                        //{
+                        //    anrechnung.Lehrer.AusgeschütteteAltersermäßigung = anrechnung.Wert;
+                        //}
+                        //anrechnung.Lehrer.CheckAltersermäßigung();
+                        
+                        
+                        // Die Beschr muss auf eine Wiki-Seite matchen. Beschr entspricht einem Thema oder einem Gremium
+                        anrechnung.Beschr = (from b in beschreibungs where b.BeschreibungId == sqlDataReader.GetInt32(1) select b.Name).FirstOrDefault() == null ? "" : (from b in beschreibungs where b.BeschreibungId == sqlDataReader.GetInt32(1) select b.Name).FirstOrDefault();
+
+
+                        // Amt und Rolle ergeben sich aus dem Text bei Grund 500 und nur dann, wenn ein KuK zugeordnet wurde. Angaben in Klammern werden ignoriert.
+                                                anrechnung.Text = Global.SafeGetString(sqlDataReader, 2) == null ? "" : Global.SafeGetString(sqlDataReader, 2); // Vorsitz etc.                            
+                        anrechnung.Amt = anrechnung.Text.Contains("A14") ? "A14" : anrechnung.Text.Contains("A15") ? "A15" : anrechnung.Text.Contains("A16") ? "A16" : "";
+
+                        // Regex für alles in runden, eckigen und geschweiften Klammern inklusive der Klammern selbst
+
+                        var allesAußerKlammern = (Regex.Replace(anrechnung.Text, @"[\(\[\{][^)\]\}]*[\)\]\}]", "")).Trim();
+                        anrechnung.Rolle = (allesAußerKlammern.Replace("A14","").Replace("A15", "").Replace("A16", "")).Trim(',').Trim();
+
+
+                        anrechnung.Hinweis = ZwischenEckigenKlammernStehenHinweise(anrechnung.Text);
+                        anrechnung.Kategorien = ZwischenGeschweiftenKlammernStehtDieKategorie(anrechnung.Text);
+
+
+
+                        
+                        anrechnung.Von = sqlDataReader.GetInt32(4) > 0 ? DateTime.ParseExact((sqlDataReader.GetInt32(4)).ToString(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture) : new DateTime();
+                        anrechnung.Bis = sqlDataReader.GetInt32(5) > 0 ? DateTime.ParseExact((sqlDataReader.GetInt32(5)).ToString(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture) : new DateTime();
+                        
+                        
                         if (anrechnung.Text.Contains("("))
                         {
                             anrechnung.TextGekürzt = anrechnung.Text.Substring(0, anrechnung.Text.IndexOf('(')).Trim();
@@ -153,6 +193,76 @@ ORDER BY CountValue.TEACHER_ID;
                     Global.WriteLine("Anrechnungen", this.Count);
                 }
             }
+        }
+
+        private List<string> ZwischenGeschweiftenKlammernStehtDieKategorie(string text)
+        {
+            List<string> list = new List<string>();
+            string pattern = @"\{([^}]*)\}";
+            MatchCollection matches = Regex.Matches(text, pattern);
+
+            foreach (Match match in matches)
+            {
+                foreach (var item in match.Value.ToString().Trim().Split(','))
+                {
+                    // Entferne die geschweiften Klammern selbst
+                    string content = match.Value.Trim('{', '}');
+                    list.Add(content);
+                }
+            }
+            return list;
+        }
+
+        private string ZwischenEckigenKlammernStehenHinweise(string text)
+        {
+            string pattern = @"\[[^\]]*\]";
+            MatchCollection matches = Regex.Matches(text, pattern);
+
+            foreach (Match match in matches)
+            {
+                // Entferne die eckigen Klammern selbst
+                string content = match.Value.Trim('[', ']');
+                return content;
+            }
+            return "";
+        }
+
+        internal void UntisAnrechnungsCsv(string tempdatei, List<int> nurDieseGründe, List<int> fürDieseGründeKeinenWert, List<string> fürDieseLehrerKeineWerte)
+        {
+            var datei = Global.Dateipfad + tempdatei;
+            int lastSlashIndex = tempdatei.LastIndexOf('\\');
+            string result = (lastSlashIndex != -1) ? tempdatei.Substring(lastSlashIndex + 1) : tempdatei;
+            tempdatei = System.IO.Path.GetTempPath() + result;
+
+            File.WriteAllText(tempdatei, "\"Name\",\"Kuerzel\",\"Mail\",\"Wert\",\"von\",\"bis\",\"Rolle\",\"Amt\",\"Grund\",\"Beschreibung\",\"Hinweis\",\"Kategorien\"" + Environment.NewLine);
+
+            foreach (var a in this.OrderBy(x => x.Lehrer.Kürzel))
+            {   
+                if (nurDieseGründe.Contains(a.Grund))
+                {
+                    var wert = (a.Wert == 0 ? "" : a.Wert.ToString());
+                                        
+                    if (!fürDieseGründeKeinenWert.Contains(a.Grund))
+                    {
+                        wert = "";
+                    }
+                    
+                    if (fürDieseLehrerKeineWerte.Contains(a.Lehrer.Kürzel))
+                    {
+                        wert = "";
+                    }
+
+                        var kategorien = "";
+                    foreach (var c in a.Kategorien) 
+                    {
+                        kategorien += c + ",";
+                    }
+
+                    File.AppendAllText(tempdatei, "\"" + (a.Lehrer.Titel == "" ? "" : a.Lehrer.Titel + " ") + a.Lehrer.Vorname + " " + a.Lehrer.Nachname + "\",\"" + a.Lehrer.Kürzel + "\",\"" + a.Lehrer.Mail + "\",\"" + wert + "\",\"" + (a.Von.Year == 1 ? "" : a.Von.ToShortDateString()) + "\",\"" + (a.Bis.Year == 1 ? "" : a.Bis.ToShortDateString()) + "\",\"" + a.Rolle + "\",\"" + a.Amt + "\",\"" + a.Grund + "\",\"" + (a.Beschr == "" ? "" : "[[" + a.Beschr + "]]") + "\",\"" + a.Hinweis + "\",\"" + kategorien.TrimEnd(',') + "\"" + Environment.NewLine);
+                }
+            }
+
+            Global.Dateischreiben(result, datei, tempdatei);
         }
 
         internal Lehrer GetBildungsgangleitung(Bildungsgang bildungsgang, Lehrers lehrers)

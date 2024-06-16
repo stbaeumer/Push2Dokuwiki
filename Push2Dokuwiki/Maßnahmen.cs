@@ -60,7 +60,7 @@ WHERE vorgang_schuljahr = check_null (hole_schuljahr_rech ('',  0)) AND info_gru
                     }
 
                     connection.Close();
-                    Global.WriteLine("Maßnahmen",this.Count);
+                    Global.WriteLine(" Maßnahmen",this.Count);
                 }
             }
             catch (Exception ex)

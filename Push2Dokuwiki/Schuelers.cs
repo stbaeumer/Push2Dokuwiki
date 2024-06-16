@@ -7,11 +7,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace Push2Dokuwiki
 {
     public class Schuelers : List<Schueler>
-    {
+    {   
         public Schuelers()
         {
         }
@@ -340,6 +341,7 @@ ORDER BY ausgetreten DESC, klasse, schueler.name_1, schueler.name_2", connection
                         schueler.Id = theRow["AtlantisSchuelerId"] == null ? -99 : Convert.ToInt32(theRow["AtlantisSchuelerId"]);
                         schueler.Nachname = theRow["Nachname"] == null ? "" : theRow["Nachname"].ToString();
                         schueler.Vorname = theRow["Vorname"] == null ? "" : theRow["Vorname"].ToString();
+                        schueler.Jahrgang = theRow["AktJahrgang"] == null ? "" : theRow["AktJahrgang"].ToString();                        
                         schueler.Ort = theRow["Ort"] == null ? "" : theRow["Ort"].ToString();
                         schueler.Klasse = theRow["Klasse"] == null ? new Klasse() : (from k in klasses where k.NameUntis == theRow["Klasse"].ToString() select k).FirstOrDefault();
                         schueler.Wahlklausur12_1 = theRow["Wahlklausur12_1"] == null ? "" : theRow["Wahlklausur12_1"].ToString();
@@ -483,21 +485,27 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
             }
         }
 
-        internal void Schulpflicht(string tempdatei, Klasses klasses)
+        internal void SchulpflichtüberwachungCsvTxt(string tempdateiTxt, string tempdateiCsv, int anzahlTage, int anzahlStundenUnentschGesamt, int anzahlStundenUnentschLetzte14Tage, Klasses klasses)
         {
-            var datei = Global.Dateipfad + tempdatei;
-            int lastSlashIndex = tempdatei.LastIndexOf('\\');
-            string result = (lastSlashIndex != -1) ? tempdatei.Substring(lastSlashIndex + 1) : tempdatei;
-            tempdatei = System.IO.Path.GetTempPath() + result;
+            var dateiCsv = Global.Dateipfad + tempdateiCsv;
+            var dateiTxt = Global.Dateipfad + tempdateiTxt;
+            int lastSlashIndex = tempdateiCsv.LastIndexOf('\\');
+            string resultCsv = (lastSlashIndex != -1) ? tempdateiCsv.Substring(lastSlashIndex + 1) : tempdateiCsv;
+            string resultTxt = (lastSlashIndex != -1) ? tempdateiTxt.Substring(lastSlashIndex + 1) : tempdateiTxt;
+
+            tempdateiCsv = System.IO.Path.GetTempPath() + resultCsv;
+            tempdateiTxt = System.IO.Path.GetTempPath() + resultTxt;
 
             var belegungslisteNeu = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\\schulpflichtueberwachung.txt";
 
-            File.WriteAllText(tempdatei, "====== Schulpflichtüberwachung ======" + Environment.NewLine);
-            File.AppendAllText(tempdatei, Environment.NewLine);
-            File.AppendAllText(tempdatei, "  Diese Datei bitte nicht manuell editieren." + Environment.NewLine);
-            File.AppendAllText(tempdatei, Environment.NewLine);
-            File.AppendAllText(tempdatei, "Fehlzeiten werden erst ab " + 8 + " Stunden berücksichtigt." + Environment.NewLine);
-            File.AppendAllText(tempdatei, Environment.NewLine);
+            File.WriteAllText(tempdateiCsv, "\"Klasse\",\"Klassenleitung\",\"Name\",\"Massnahmen\",\"Datum\",\"Aussage\"" + Environment.NewLine);
+
+            File.WriteAllText(tempdateiTxt, "====== Schulpflichtüberwachung ======" + Environment.NewLine);
+            File.AppendAllText(tempdateiTxt, Environment.NewLine);
+            File.AppendAllText(tempdateiTxt, "  Diese Datei bitte nicht manuell editieren." + Environment.NewLine);
+            File.AppendAllText(tempdateiTxt, Environment.NewLine);
+            File.AppendAllText(tempdateiTxt, "Fehlzeiten werden erst ab " + 8 + " Stunden berücksichtigt." + Environment.NewLine);
+            File.AppendAllText(tempdateiTxt, Environment.NewLine);
 
             foreach (var kl in (from k in this.OrderBy(x => x.Klasse.NameUntis) select k.Klasse.NameUntis).Distinct().ToList())
             {
@@ -506,37 +514,110 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
                 var klassenleitungenString = "";
                 foreach (var k in klassenleitungen)
                 {
-                    klassenleitungenString += "[[chat>"+ k.Mail.Replace("@berufskolleg-borken.de","") + "|" + k.Vorname + " " +     k.Nachname + "]],";
+                    //klassenleitungenString += "[[chat>"+ k.Mail.Replace("@berufskolleg-borken.de","") + "|" + k.Vorname + " " +     k.Nachname + "]],";
+                    klassenleitungenString += k.Kürzel + ",";
                 }
 
-                File.AppendAllText(tempdatei, "===== " + kl + " =====" + Environment.NewLine);
+                File.AppendAllText(tempdateiTxt, "===== " + kl + " =====" + Environment.NewLine);
                                 
-                File.AppendAllText(tempdatei, klassenleitungenString.TrimEnd(',') + Environment.NewLine);
-                File.AppendAllText(tempdatei, "" + Environment.NewLine);
+                File.AppendAllText(tempdateiTxt, klassenleitungenString.TrimEnd(',') + Environment.NewLine);
+                File.AppendAllText(tempdateiTxt, "" + Environment.NewLine);
 
-                File.AppendAllText(tempdatei, "++++" + kl + " |" + Environment.NewLine);
-                File.AppendAllText(tempdatei, Environment.NewLine);
+                File.AppendAllText(tempdateiTxt, "++++" + kl + " |" + Environment.NewLine);
+                File.AppendAllText(tempdateiTxt, Environment.NewLine);
 
-                File.AppendAllText(tempdatei, "^  Name  ^  Fehlzeiten  ^  Vorgänge  ^" + Environment.NewLine);
+                File.AppendAllText(tempdateiTxt, "^  Name  ^  Fehlzeiten  ^  Vorgänge  ^" + Environment.NewLine);
 
-                foreach (var schueler in this.OrderBy(x=>x.Nachname))
+                foreach (var schueler in this.OrderBy(x => x.Nachname))
                 {
                     if (schueler.Klasse.NameUntis == kl)
                     {
-                        File.AppendAllText(tempdatei, schueler.Zeile + Environment.NewLine);
+                        var name = schueler.Vorname.Substring(0, 2) + "." + schueler.Nachname.Substring(0, 2);
+
+                        schueler.JüngsteMaßnahme = schueler.Maßnahmen.Count == 0 ? new Maßnahme() : (from m in schueler.Maßnahmen.OrderByDescending(x => x.Datum) select m).FirstOrDefault();
+
+                        schueler.OffeneStundenSeitJüngsterMaßnahme = (from a in schueler.Abwesenheiten
+                                                                      where a.StudentId == schueler.Id
+                                                                      where a.Status == "offen"
+                                                                      where a.Datum > schueler.JüngsteMaßnahme.Datum
+                                                                      where a.Datum > new DateTime(Convert.ToInt32(Global.AktSj[0]), 8, 1)
+                                                                      select a.Fehlstunden).Sum();
+
+                        schueler.NichtEntschStundenSeitJüngsterMaßnahme = (from a in schueler.Abwesenheiten
+                                                                           where a.StudentId == schueler.Id
+                                                                           where a.Status == "nicht entsch."
+                                                                           where a.Datum > schueler.JüngsteMaßnahme.Datum
+                                                                           where a.Datum > new DateTime(Convert.ToInt32(Global.AktSj[0]), 8, 1)
+                                                                           select a.Fehlstunden).Sum();
+
+                        schueler.NichtEntschStundenInDenLetzten14Tagen = (from a in schueler.Abwesenheiten
+                                                                          where a.StudentId == schueler.Id
+                                                                          where a.Status == "nicht entsch."
+                                                                          where a.Datum.AddDays(14) > DateTime.Now
+                                                                          select a.Fehlstunden).Sum();
+
+                        schueler.NichtEntschStundenDiesesSchuljahr = (from a in schueler.Abwesenheiten
+                                                                      where a.StudentId == schueler.Id
+                                                                      where a.Status == "nicht entsch."
+                                                                      where a.Datum >= new DateTime(Convert.ToInt32((Global.AktSj[0])),8,1)
+                                                                      select a.Fehlstunden).Sum();
+
+                        schueler.MaßnahmenAlsWikiLinkAufzählung = schueler.GetMaßnahmenAlsWikiLinkAufzählung();
+                        schueler.MaßnahmenAlsWikiLinkAufzählungDatum = schueler.GetMaßnahmenAlsWikiLinkAufzählungDatum();
+
+                        // Dem Klassenlehrer werden 14 Tage eingeräumt, um Fehlzeiten nachzuhalten.
+                        schueler.OffeneStundenSeitJüngsterMaßnahmeAuchschonLängerAls14TageZurückliegen = (from a in schueler.Abwesenheiten
+                                                                                                          where a.Datum.AddDays(anzahlTage) < DateTime.Now
+                                                                                                          where a.Status == "offen"
+                                                                                                          select a.Fehlstunden).Sum();
+
+                        var aussage = "";
+
+                        // Wenn es offene Fehlstunden gibt, die teilweise schon länger als 14 Tage zurückliegen
+                        if (schueler.OffeneStundenSeitJüngsterMaßnahmeAuchschonLängerAls14TageZurückliegen > 0)
+                        {
+                            aussage += schueler.OffeneStundenSeitJüngsterMaßnahmeAuchschonLängerAls14TageZurückliegen + " offene Stunden, die z.T. schon " + anzahlTage + " Tage zurückliegen.";
+                        }
+
+                        // Wenn es schon Maßnahmen gab ...
+                        if (schueler.Maßnahmen.Count > 1)
+                        {
+                            // ... und die letzte Maßnahme weniger als 14 Tage her ist
+                            if (schueler.JüngsteMaßnahme.Datum.AddDays(14) > DateTime.Now)
+                            {
+                                // ... und es dennoch zu Fehlzeiten kommt.
+                                if (schueler.NichtEntschStundenSeitJüngsterMaßnahme > 1)
+                                {
+                                    aussage += "Trotz " + schueler.JüngsteMaßnahme.Beschreibung + " entstehen aktuell unent. Fehlstd. (" + schueler.NichtEntschStundenSeitJüngsterMaßnahme + ").";
+                                }
+                            }
+                        }
+
+                        // Wenn es noch keine Maßnahme gab ...
+                        if (schueler.Maßnahmen.Count == 0)
+                        {
+                            if (schueler.NichtEntschStundenDiesesSchuljahr > anzahlStundenUnentschGesamt)
+                            {
+                                aussage += "Bisher keine Maßnahme trotz " + schueler.NichtEntschStundenDiesesSchuljahr + " unent. Fehlst. in diesem SJ. Mahnung?";
+                            }
+                            else
+                            {
+                                if (schueler.NichtEntschStundenInDenLetzten14Tagen > anzahlStundenUnentschLetzte14Tage )
+                                {
+                                    aussage += schueler.NichtEntschStundenInDenLetzten14Tagen + " unent. Fehlst. in den letzten 14 Tagen. Mahnung?";
+                                }
+                            }
+                        }
+
+                        if (aussage != "")
+                        {
+                            File.AppendAllText(tempdateiCsv, "\"" + schueler.Klasse.NameUntis + "\",\"" + klassenleitungenString.TrimEnd(',') + "\",\"" + name + "\",\"" + schueler.MaßnahmenAlsWikiLinkAufzählung + "\",\"" + schueler.MaßnahmenAlsWikiLinkAufzählungDatum + "\",\"" + aussage + "\"" + Environment.NewLine);
+                        }
                     }
                 }
-
-                File.AppendAllText(tempdatei, "++++" + Environment.NewLine);
-                File.AppendAllText(tempdatei, Environment.NewLine);
             }
 
-            File.AppendAllText(tempdatei, Environment.NewLine);
-            File.AppendAllText(tempdatei, "  * Sprechen Sie die Schüler möglichst direkt auf die Fehlzeiten an. Zeigen Sie, dass wir Fehlzeiten ernstnehmen." + Environment.NewLine);
-            File.AppendAllText(tempdatei, "  * Dokumentieren Sie erzieherische Gespräche stets im Klassenbuch." + Environment.NewLine);
-            File.AppendAllText(tempdatei, "  * Mahnen Sie ganz einfach über das [[antraege_formulare:start#erzieherische_einwirkung_ordnungsmassnahme|Formular]]." + Environment.NewLine);
-
-            Global.Dateischreiben("Schulpflicht", datei, tempdatei);
+            Global.Dateischreiben(resultCsv, dateiCsv, tempdateiCsv);            
         }
 
         internal void GetWebuntisUnterrichte(Unterrichts alleUnterrichte, Gruppen alleGruppen, string interessierendeKlasse, string hzJz)
@@ -579,7 +660,7 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
             }
         }
 
-        internal Schuelers MitAbwesenheiten(Abwesenheiten abwesenheiten, Klasses klasses, Feriens feriens)
+        internal Schuelers VorgängeMaßnahmenUndFehlzeitenSeitLetzterAbwesenheit(Abwesenheiten abwesenheiten, Klasses klasses, Feriens feriens)
         {
             var maßnahmen = new Maßnahmen(abwesenheiten);
             var vorgänge = new Vorgänge(abwesenheiten);
@@ -592,14 +673,12 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
                 {                    
                     schueler.Abwesenheiten.AddRange((from a in abwesenheiten where a.StudentId == schueler.Id select a).ToList());
 
-                    var alleMaßnahmenUndVorgänge = "";
-
                     foreach (var m in maßnahmen.OrderBy(k => k.Datum))
                     {
                         if (m.SchuelerId == schueler.Id)
                         {
                             schueler.Maßnahmen.Add(m);
-                            alleMaßnahmenUndVorgänge += m.Datum.ToShortDateString()+":" + m.Kürzel + @"\\ ";
+                            schueler.AlleMaßnahmenUndVorgänge += m.Datum.ToShortDateString()+":" + m.Kürzel + ", ";
                         }
                     }
 
@@ -607,53 +686,20 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
                     {
                         if (v.SchuelerId == schueler.Id)
                         {
-                            schueler.Vorgänge.Add(v);
-                            alleMaßnahmenUndVorgänge += v.Datum.ToShortDateString() + ":" + v.Beschreibung + @"\\ ";
+                            Maßnahme m = new Maßnahme();
+                            m.Bezeichnung = v.Beschreibung;
+                            m.SchuelerId = v.SchuelerId;
+                            m.Datum = v.Datum;
+                            schueler.Maßnahmen.Add(m);
+                            schueler.AlleMaßnahmenUndVorgänge += v.Datum.ToShortDateString() + ":" + v.Beschreibung + ", ";
                         }
                     }
 
-                    var JüngsteMaßnahme = schueler.Maßnahmen.Count == 0 ? new Maßnahme() : (from m in schueler.Maßnahmen.OrderByDescending(x => x.Datum) select m).FirstOrDefault();
-
-                    var JüngsterVorgang = schueler.Vorgänge.Count == 0 ? new Vorgang() : (from m in schueler.Vorgänge.OrderByDescending(x => x.Datum) select m).FirstOrDefault();
-
-                    // Es wird die Anzahl der Fehlzeiten seit der Letzten Maßnahme bzw. seit des letzten Vorgangs bzw. seit Beginn der Abwesenheitsliste gezählt.
-
-                    schueler.Zeile = "|" + schueler.Vorname.Substring(0,2) + "." + schueler.Nachname.Substring(0,2) + ".  |";
-
-                    schueler.Zeile += (from a in schueler.Abwesenheiten where a.Status == "nicht entsch." select a.Fehlstunden).Sum() + " Stunden unentschuldigt seit ";
-
-
-                    if (JüngsteMaßnahme.Datum == JüngsterVorgang.Datum)
-                    {
-                        // seit SJ-Beginn
-                        schueler.Zeile += "dem " + abwesenheiten.ÄltesteAbwesenheit.ToShortDateString();
-                    }
-                    else
-                    {
-                        if (JüngsteMaßnahme.Datum > JüngsterVorgang.Datum)
-                        {                            
-                            schueler.Zeile += "der " + JüngsteMaßnahme.Kürzel + " (" + JüngsteMaßnahme.Datum.ToShortDateString() + ")"; 
-                        }
-                        else
-                        {                            
-                            schueler.Zeile += "der " + JüngsterVorgang.Beschreibung + " (" + JüngsterVorgang.Datum.ToShortDateString() + ")";
-                        }
-                    } 
-
-                    
-                    // Offene Stunden werden genannt, wenn mindestens eine seit über 7 Tagen offen ist.
-
-                    if ((from a in schueler.Abwesenheiten where a.Datum.AddDays(14) < DateTime.Now where a.Status == "offen" select a.Fehlstunden).Sum() > 0)
-                    {
-                        schueler.Zeile += @"\\ FIXME " + (from a in schueler.Abwesenheiten where a.Status == "offen" select a.Fehlstunden).Sum() + " Stunden teilweise schon seit über 14 Tagen offen  ";
-                    }
-
-                    schueler.Zeile += "  |" + alleMaßnahmenUndVorgänge + "  |";
                     sMitAbwesenheiten.Add(schueler);
                 }
             }
                         
-            Global.WriteLine("Schüler mit Abwesenheiten", sMitAbwesenheiten.Count);
+            Global.WriteLine(" Schüler mit Abwesenheiten", sMitAbwesenheiten.Count);
 
             return sMitAbwesenheiten;
         }
@@ -1026,6 +1072,36 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
             {
                 throw ex;
             }            
+        }
+
+        internal void PraktikantenCsv(string tempdatei, List<string> interessierendeKlassenUndJg)
+        {
+            var datei = Global.Dateipfad + tempdatei;
+            int lastSlashIndex = tempdatei.LastIndexOf('\\');
+            string result = (lastSlashIndex != -1) ? tempdatei.Substring(lastSlashIndex + 1) : tempdatei;
+            tempdatei = System.IO.Path.GetTempPath() + result;
+
+            var praktikanten = new List<Schueler>();
+
+            foreach (var item in interessierendeKlassenUndJg)
+            {
+                praktikanten.AddRange((from s in this where s.Klasse.NameUntis.StartsWith(item.Split(',')[0]) where s.Jahrgang == "0" + item.Split(',')[1] select s).ToList());
+            }
+
+
+            File.WriteAllText(tempdatei, "\"Name\",\"Klasse\",\"Jahrgang\",\"Betrieb\",\"Betreuung\"" + Environment.NewLine);
+            
+            foreach (var praktikant in praktikanten)
+            {
+                if (praktikant != null)
+                {
+                    var klasseKurz = praktikant.Klasse.NameUntis.Substring(0,(Regex.Match(praktikant.Klasse.NameUntis, @"\d").Index));
+
+                    File.AppendAllText(tempdatei, "\"" + praktikant.Nachname+", "+praktikant.Vorname + "\",\"" + klasseKurz + "\",\"" + praktikant.Jahrgang + "\",\"\",\"\"" + Environment.NewLine);
+                }
+            }
+
+            Global.Dateischreiben(tempdatei, datei, tempdatei);
         }
     }
 }

@@ -7,15 +7,15 @@ namespace Push2Dokuwiki
         private string v;
         private int fehltUnunterbrochenUnentschuldigtSeitTagen;
 
-        public int SchuelerId { get; private set; }
-        public string Beschreibung { get; private set; }
-        public DateTime Datum { get; private set; }
-        public string Kürzel { get; private set; }
-        public string Rechtsgrundlage { get; private set; }
+        public int SchuelerId { get; set; }
+        public string Beschreibung { get; set; }
+        public DateTime Datum { get; set; }
+        public string Kürzel { get; set; }
+        public string Rechtsgrundlage { get;  set; }
         public int FehltUnunterbrochenUnentschuldigtSeitTagen { get; private set; }
         public string HtmlTabelle { get; private set; }
         public string MöglicheSanktion { get; private set; }
-        public string Bezeichnung { get; private set; }
+        public string Bezeichnung { get; set; }
 
         public Maßnahme(int schuelerId, string beschreibung, string bezeichnung, DateTime datum, string kürzel)
         {

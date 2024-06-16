@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Push2Dokuwiki
 {
@@ -15,5 +16,10 @@ namespace Push2Dokuwiki
         /// Die öffende runde Klammer und alles danach wird abgeschnitten.
         /// </summary>
         public string TextGekürzt { get; internal set; }
+        public Lehrer Lehrer { get; internal set; }
+        public string Rolle { get; internal set; }
+        public string Amt { get; internal set; }
+        public string Hinweis { get; internal set; }
+        public List<string> Kategorien { get; internal set; }
     }
 }

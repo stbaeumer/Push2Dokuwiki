@@ -61,7 +61,7 @@ namespace Push2Dokuwiki
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("Die Zeile " + zeile + " müsste 16 Spalten haben, hat aber " + fehler + ". Die Zeile wird ignoriert.");
+                            Console.WriteLine(" Die Zeile " + zeile + " müsste 16 Spalten haben, hat aber " + fehler + ". Die Zeile wird ignoriert.");
                         }
                     }
                 }

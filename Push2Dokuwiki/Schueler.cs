@@ -89,13 +89,13 @@ namespace Push2Dokuwiki
         public bool IrgendeineMaßnahmeInDenLetzten12Monaten { get; set; }
         public int NichtEntschuldigteFehlminuten { get; set; }
         public int NichtEntschuldigteFehlminutenSeitLetzterMaßnahme { get; set; }
-        public int OffeneStunden { get;  set; }
+        public int OffeneStunden { get; set; }
         public bool MehrAls10FehlzeitenIndenLetzten30Tagen { get; set; }
         public int AnzahlNichtEntschuldigteTage { get; set; }
         public string FehltSeit { get; set; }
         public bool MehrAls10OffeneOderNichtEntschuldigteFehlzeitenDieAuchSchonMehrAlsEineWocheZurückliegen { get; set; }
         public int NichtEntschuldigteFehlstundenImLetztenMonat { get; set; }
-        public int NichtEntschuldigteFehlminutenSeitSchuljahresbeginn { get;  set; }
+        public int NichtEntschuldigteFehlminutenSeitSchuljahresbeginn { get; set; }
         public int NichtEntschuldigteFehlstunden { get; set; }
         public int NichtEntschuldigteFehlstundenSeitLetzterMaßnahme { get; set; }
         public bool IstSchulpflichtig { get; set; }
@@ -103,6 +103,20 @@ namespace Push2Dokuwiki
         public List<Abwesenheit> AbwesenheitenOffen { get; internal set; }
         public List<Abwesenheit> AbwesenheitenNichtEntsch { get; internal set; }
         public string Zeile { get; internal set; }
+        public string Jahrgang { get; internal set; }
+        public int UnenschuldigteFehlstunden { get; internal set; }
+        public Maßnahme JüngsteMaßnahme { get; internal set; }
+        public Vorgang JüngsterVorgang { get; internal set; }
+        public string JüngsteEskalation { get; internal set; }
+        public string AlleMaßnahmenUndVorgänge { get; internal set; }
+        public int OffeneStundenSeitJüngsterMaßnahme { get; internal set; }
+        public int OffeneStundenSeitJüngsterVorgang { get; internal set; }
+        public int NichtEntschStundenSeitJüngsterMaßnahme { get; internal set; }
+        public int OffeneStundenSeitJüngsterMaßnahmeAuchschonLängerAls14TageZurückliegen { get; internal set; }
+        public string MaßnahmenAlsWikiLinkAufzählung { get; internal set; }
+        public object MaßnahmenAlsWikiLinkAufzählungDatum { get; internal set; }
+        public int NichtEntschStundenInDenLetzten14Tagen { get; internal set; }
+        public int NichtEntschStundenDiesesSchuljahr { get; internal set; }
 
         private string GetTabelle()
         {
@@ -319,6 +333,72 @@ namespace Push2Dokuwiki
             }
 
             return "";
+        }
+
+        internal string GetJüngsteEskalation()
+        {
+            if (JüngsteMaßnahme.Datum == JüngsterVorgang.Datum)
+            {
+                // seit SJ-Beginn
+                return "dem Schuljahresbeginn";
+            }
+            else
+            {
+                if (JüngsteMaßnahme.Datum > JüngsterVorgang.Datum)
+                {
+                    return "der " + JüngsteMaßnahme.Kürzel + " (" + JüngsteMaßnahme.Datum.ToShortDateString() + ")";
+                }
+                else
+                {
+                    return "der " + JüngsterVorgang.Beschreibung + " (" + JüngsterVorgang.Datum.ToShortDateString() + ")";
+                }
+            }
+        }
+
+        internal string GetMaßnahmenAlsWikiLinkAufzählung()
+        {
+            var x = "";
+            foreach (var item in Maßnahmen.OrderBy(y => y.Datum))
+            {
+                var bezeichnung = "";
+
+                if (item.Bezeichnung.StartsWith("M") || item.Kürzel.StartsWith("M"))
+                {
+                    bezeichnung = "eskalationsstufen_erzieherische_einwirkung_ordnungsmassnahmen:mahnung";
+                }
+                if (item.Bezeichnung.ToLower().StartsWith("at"))
+                {
+                    bezeichnung = "eskalationsstufen_erzieherische_einwirkung_ordnungsmassnahmen:attestpflicht";
+                }
+                if (item.Bezeichnung.StartsWith("T"))
+                {
+                    bezeichnung = "konferenzen:teilkonferenz_ordnungsmassnahmen";
+                }
+                if (bezeichnung == "")
+                {
+                     bezeichnung = item.Bezeichnung;
+                }
+                if (bezeichnung == "")
+                {
+                    bezeichnung = item.Kürzel;
+                }
+
+                x += "[[" + bezeichnung + "]],";
+            }
+            return x.TrimEnd(',');
+        }
+
+        internal object GetMaßnahmenAlsWikiLinkAufzählungDatum()
+        {
+            var x = "";
+            foreach (var item in Maßnahmen.OrderBy(y => y.Datum))
+            {
+                //if (item.Bezeichnung.StartsWith("M") || item.Bezeichnung.StartsWith("At") || item.Bezeichnung.StartsWith("T"))
+                {
+                    x += item.Datum.ToString("yyyy-MM-dd") + ",";
+                }
+            }
+            return x.TrimEnd(',');
         }
     }
 }

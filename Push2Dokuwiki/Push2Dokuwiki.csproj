@@ -82,6 +82,8 @@
     <Compile Include="Schuelers.cs" />
     <Compile Include="Team.cs" />
     <Compile Include="Teams.cs" />
+    <Compile Include="Termin.cs" />
+    <Compile Include="Termine.cs" />
     <Compile Include="Unterricht.cs" />
     <Compile Include="Unterrichts.cs" />
     <Compile Include="Unterrichtsgruppe.cs" />

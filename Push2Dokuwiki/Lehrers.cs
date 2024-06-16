@@ -17,8 +17,6 @@ namespace Push2Dokuwiki
 
         public Lehrers(int periode, Raums raums)
         {
-            Anrechnungs anrechnungen = new Anrechnungs(periode);
-
             using (SqlConnection odbcConnection = new SqlConnection(Global.ConnectionStringUntis))
             {
                 try
@@ -55,45 +53,43 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
                             try
                             {
                                 lehrer.Flags = Global.SafeGetString(sqlDataReader, 10);
-                                lehrer.Anrechnungen = (from a in anrechnungen where a.TeacherIdUntis == sqlDataReader.GetInt32(0) select a).ToList();
 
-                                if (lehrer.Flags.Contains("I") && lehrer.Anrechnungen.Count == 0)
+                                lehrer.Vorname = Global.SafeGetString(sqlDataReader, 3);
+                                lehrer.Mail = Global.SafeGetString(sqlDataReader, 4);
+                                lehrer.Raum = (from r in raums where r.IdUntis == sqlDataReader.GetInt32(5) select r.Raumnummer).FirstOrDefault();
+                                lehrer.Titel = Global.SafeGetString(sqlDataReader, 6);
+                                lehrer.Text2 = Global.SafeGetString(sqlDataReader, 10);
+                                lehrer.Deputat = Convert.ToDouble(sqlDataReader.GetInt32(7)) / 1000;
+                                lehrer.Geschlecht = Global.SafeGetString(sqlDataReader, 8).Contains("W") ? "w" : "m";
+
+                                if (lehrer.Geschlecht != "w" && lehrer.Geschlecht != "m")
                                 {
-                                    Console.WriteLine(lehrer.Kürzel + ": Der Lehrer wird ignoriert.");
+                                    Console.WriteLine(lehrer.Kürzel + " hat kein Geschlecht.");
                                 }
-                                else
+                                try
                                 {
-                                    lehrer.Vorname = Global.SafeGetString(sqlDataReader, 3);
-                                    lehrer.Mail = Global.SafeGetString(sqlDataReader, 4);
-                                    lehrer.Raum = (from r in raums where r.IdUntis == sqlDataReader.GetInt32(5) select r.Raumnummer).FirstOrDefault();
-                                    lehrer.Titel = Global.SafeGetString(sqlDataReader, 6);
-                                    lehrer.Text2 = Global.SafeGetString(sqlDataReader, 10);
-                                    lehrer.Deputat = Convert.ToDouble(sqlDataReader.GetInt32(7)) / 1000;
-                                    lehrer.Geschlecht = Global.SafeGetString(sqlDataReader, 8).Contains("W") ? "w" : "m";
-
-                                    if (lehrer.Geschlecht != "w" && lehrer.Geschlecht != "m")
-                                    {
-                                        Console.WriteLine(lehrer.Kürzel + " hat kein Geschlecht.");
-                                    }
-                                    try
-                                    {
-                                        lehrer.Geburtsdatum = DateTime.ParseExact(sqlDataReader.GetInt32(9).ToString(), "yyyyMMdd", CultureInfo.InvariantCulture);
-                                    }
-                                    catch (Exception)
-                                    {
-                                        Console.WriteLine(" " + lehrer.Kürzel + ": Kein Geburtsdatum");
-                                    }
-
-                                    if (lehrer.Geburtsdatum.Year > 1)
-                                    {
-                                        lehrer.AlterAmErstenSchultagDiesesJahres = lehrer.GetAlterAmErstenSchultagDiesesJahres();
-                                        lehrer.ProzentStelle = lehrer.GetProzentStelle();
-                                        lehrer.AusgeschütteteAltersermäßigung = (from a in lehrer.Anrechnungen where a.Grund == 200 select a.Wert).FirstOrDefault();
-                                        lehrer.CheckAltersermäßigung();
-                                    }
-
-                                    this.Add(lehrer);
+                                    lehrer.Geburtsdatum = DateTime.ParseExact(sqlDataReader.GetInt32(9).ToString(), "yyyyMMdd", CultureInfo.InvariantCulture);
                                 }
+                                catch (Exception)
+                                {
+                                    // Bei Nicht-Lehrern ist das Geb.Dat. egal
+                                    if (lehrer.Deputat>0)
+                                    {
+                                        if(lehrer.Kürzel != "MOR" && lehrer.Kürzel != "TIS")
+                                        {
+                                            Console.WriteLine(" " + lehrer.Kürzel + ": Kein Geburtsdatum");
+                                        }
+                                    }
+                                }
+
+                                if (lehrer.Geburtsdatum.Year > 1)
+                                {
+                                    lehrer.AlterAmErstenSchultagDiesesJahres = lehrer.GetAlterAmErstenSchultagDiesesJahres();
+                                    lehrer.ProzentStelle = lehrer.GetProzentStelle();                                    
+                                    //lehrer.CheckAltersermäßigung();
+                                }
+
+                                this.Add(lehrer);
                             }
                             catch (Exception ex)
                             {
@@ -114,8 +110,6 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
                 }
             }
         }
-
-
 
         public List<Lehrer> Referendare()
         {
@@ -539,46 +533,46 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
             //alleLehrerImUnterricht.Add(new Lehrer("Wenz", "Dr.", "w", "Landwirtschaftskammer NRW", "3301"));
             //alleLehrerImUnterricht.Add(new Lehrer("Plaßmann", "", "m", "Schulleiter, bitte im Schulbüro melden.", "1014"));
 
-            File.WriteAllText(datei, "====== Sprechtag ======" + Environment.NewLine);
-            File.AppendAllText(datei, Environment.NewLine);
+            File.WriteAllText(tempdatei, "====== Sprechtag ======" + Environment.NewLine);
+            File.AppendAllText(tempdatei, Environment.NewLine);
 
-            File.AppendAllText(datei, "Zum jährlichen Sprechtag laden wir sehr herzlich am Mittwoch nach der Zeugnisausgabe in der Zeit von 13:30 bis 17:30 Uhr ein. Der Unterricht endet nach der 5. Stunde um 12:00 Uhr." + Environment.NewLine);
+            File.AppendAllText(tempdatei, "Zum jährlichen Sprechtag laden wir sehr herzlich am Mittwoch nach der Zeugnisausgabe in der Zeit von 13:30 bis 17:30 Uhr ein. Der Unterricht endet nach der 5. Stunde um 12:00 Uhr." + Environment.NewLine);
 
             int i = 1;
-            File.AppendAllText(datei, Environment.NewLine);
-            File.AppendAllText(datei, "<WRAP column 15em>" + Environment.NewLine);
-            File.AppendAllText(datei, Environment.NewLine);
-            File.AppendAllText(datei, "^Name^Raum^" + Environment.NewLine);
+            File.AppendAllText(tempdatei, Environment.NewLine);
+            File.AppendAllText(tempdatei, "<WRAP column 15em>" + Environment.NewLine);
+            File.AppendAllText(tempdatei, Environment.NewLine);
+            File.AppendAllText(tempdatei, "^Name^Raum^" + Environment.NewLine);
 
             var lehrerProSpalteAufSeite2 = ((alleLehrerImUnterricht.Count - 60) / 3) + 1;
 
             foreach (var l in alleLehrerImUnterricht.OrderBy(x => x.Nachname))
             {
-                File.AppendAllText(datei, "|" + (l.Geschlecht == "m" ? "Herr " : "Frau ") + (l.Titel == "" ? "" : l.Titel + " ") + l.Nachname + (l.Text2 == "" ? "" : " ((" + l.Text2 + "))") + "|" + (l.Raum == "" ? "|" : l.Raum + "|") + Environment.NewLine);
+                File.AppendAllText(tempdatei, "|" + (l.Geschlecht == "m" ? "Herr " : "Frau ") + (l.Titel == "" ? "" : l.Titel + " ") + l.Nachname + (l.Text2 == "" ? "" : " ((" + l.Text2 + "))") + "|" + (l.Raum == "" ? "|" : l.Raum + "|") + Environment.NewLine);
 
                 if (i == 20 || i == 40 || i == 60 || i == 60 + lehrerProSpalteAufSeite2 || i == 60 + lehrerProSpalteAufSeite2 * 2)
                 {
-                    File.AppendAllText(datei, "</WRAP>" + Environment.NewLine);
-                    File.AppendAllText(datei, Environment.NewLine);
+                    File.AppendAllText(tempdatei, "</WRAP>" + Environment.NewLine);
+                    File.AppendAllText(tempdatei, Environment.NewLine);
 
                     if (i == 60)
                     {
-                        File.AppendAllText(datei, "<WRAP pagebreak>" + Environment.NewLine);
+                        File.AppendAllText(tempdatei, "<WRAP pagebreak>" + Environment.NewLine);
                     }
 
-                    File.AppendAllText(datei, "<WRAP column 15em>" + Environment.NewLine);
-                    File.AppendAllText(datei, Environment.NewLine);
-                    File.AppendAllText(datei, "^Name^Raum^" + Environment.NewLine);
+                    File.AppendAllText(tempdatei, "<WRAP column 15em>" + Environment.NewLine);
+                    File.AppendAllText(tempdatei, Environment.NewLine);
+                    File.AppendAllText(tempdatei, "^Name^Raum^" + Environment.NewLine);
                 }
                 i++;
             }
 
-            File.AppendAllText(datei, "</WRAP>" + Environment.NewLine);
-            File.AppendAllText(datei, Environment.NewLine);
+            File.AppendAllText(tempdatei, "</WRAP>" + Environment.NewLine);
+            File.AppendAllText(tempdatei, Environment.NewLine);
 
-            File.AppendAllText(datei, "Klassenleitungen finden die Einladung als Kopiervorlage im [[sharepoint>:f:/s/Kollegium2/EjakJvXmitdCkm_iQcqOTLwB-9EWV5uqXE8j3BrRzKQQAw?e=OwxG0N|Sharepoint]].\r\n" + Environment.NewLine);
+            File.AppendAllText(tempdatei, "Klassenleitungen finden die Einladung als Kopiervorlage im [[sharepoint>:f:/s/Kollegium2/EjakJvXmitdCkm_iQcqOTLwB-9EWV5uqXE8j3BrRzKQQAw?e=OwxG0N|Sharepoint]].\r\n" + Environment.NewLine);
 
-            File.AppendAllText(datei, Environment.NewLine);
+            File.AppendAllText(tempdatei, Environment.NewLine);
 
             string freieR = "";
             foreach (var raum in raums.OrderBy(x => x.Raumnummer))
@@ -589,11 +583,60 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
                 }
             }
 
-            freieR = Global.InsertLineBreaks(freieR, 77);
+            freieR = Global.InsertLineBreaks(freieR, 110);
 
-            Console.WriteLine("Sprechtag: Freie Räume: " + freieR.TrimEnd(','));
+            Console.WriteLine(@"Sprechtag: Freie Räume müssen in Untis in den Lehrer-Stammdaten eingetragen werden:
+" + freieR.TrimEnd(','));
 
-            Global.Dateischreiben("Sprechtag", datei, tempdatei);
+            Global.Dateischreiben(result, datei, tempdatei);
+        }
+
+        internal void LulCsv(string tempDateiOrdner)
+        {
+            var zielOrdnerUndDatei = Global.Dateipfad + tempDateiOrdner;
+            int lastSlashIndex = tempDateiOrdner.LastIndexOf('\\');
+            string datei = (lastSlashIndex != -1) ? tempDateiOrdner.Substring(lastSlashIndex + 1) : tempDateiOrdner;
+            tempDateiOrdner = System.IO.Path.GetTempPath() + datei;
+                        
+            File.WriteAllText(tempDateiOrdner, "\"Kürzel\",\"Vorname\",\"Nachname\",\"Name\",\"Mail\"" + Environment.NewLine);
+            
+            foreach (var l in this.OrderBy(x => x.Nachname))
+            {
+                // Das Deputat unterscheidet LuL von Mitarbeitern
+                if (l.Deputat != 0)
+                {
+                    File.AppendAllText(tempDateiOrdner, "\"" + l.Kürzel + "\",\"" + l.Vorname + "\",\"" + l.Nachname + "\",\"" + (l.Titel == "" ? "" : l.Titel + " ") + l.Vorname + " " + l.Nachname + "\",\"" + l.Mail + "\"" + Environment.NewLine);
+                }                
+            }
+
+            Global.Dateischreiben(datei, zielOrdnerUndDatei, tempDateiOrdner);
+        }
+
+        internal void AnrechnungenCsv(string tempdatei)
+        {
+            var datei = Global.Dateipfad + tempdatei;
+            int lastSlashIndex = tempdatei.LastIndexOf('\\');
+            string result = (lastSlashIndex != -1) ? tempdatei.Substring(lastSlashIndex + 1) : tempdatei;
+            tempdatei = System.IO.Path.GetTempPath() + result;
+
+            string anrechnungstring = "";
+
+            File.WriteAllText(tempdatei, "\"Grund\",\"Anzahl Stunden\",\"Hinweise\",\"Lehrkraft\"" + Environment.NewLine);
+                        
+            foreach (var lehrer in this.OrderBy(x => x.Nachname))
+            {
+                foreach (var anrechnung in lehrer.Anrechnungen)
+                {
+                    if (anrechnung.Grund == 500 && anrechnung.Wert > 0)
+                    {
+                        var hinweise = (anrechnung.Von.Year == 1 ? "" : "von" + anrechnung.Von.ToShortDateString()+ " ") + (anrechnung.Bis.Year == 1 ? "" : "bis" + anrechnung.Bis.ToShortDateString());
+
+                        File.AppendAllText(tempdatei, "\""+ anrechnung.Beschr + "\",\"" + anrechnung.Wert + "\",\"" + hinweise + "\",\"" + lehrer.Kürzel +"\"" + Environment.NewLine);
+                    }
+                }
+            }
+
+            Global.Dateischreiben("Anrechnungen", datei, tempdatei);
         }
     }
 }

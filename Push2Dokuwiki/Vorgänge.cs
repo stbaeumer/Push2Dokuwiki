@@ -66,7 +66,7 @@ WHERE s_vorgang_typ = 'Schulversäumnis'", connection);
                     }
 
                     connection.Close();
-                    Console.WriteLine("Schulversäumnisse (Mahnung)",this.Count);
+                    Global.WriteLine(" Vorgänge",this.Count);
                 }
             }
             catch (Exception ex)
