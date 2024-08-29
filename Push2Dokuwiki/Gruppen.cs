@@ -6,75 +6,75 @@ namespace Push2Dokuwiki
 {
     public class Gruppen : List<Gruppe>
     {
-        public Gruppen(string kriterium, DateTime dateTime)
+        public Gruppen(string kriterium, int sovieleTageDarfDieDateiMaxAltSein)
         {
             string datei = "";
             try
             {
-                datei = Global.CheckFile(kriterium, dateTime);
+                datei = Global.CheckFile(kriterium, sovieleTageDarfDieDateiMaxAltSein);
 
-                using (StreamReader reader = new StreamReader(datei))
+                if (datei != null)
                 {
-                    var überschrift = reader.ReadLine();
-                    int i = 1;
-
-                    while (true)
+                    using (StreamReader reader = new StreamReader(datei))
                     {
-                        i++;
-                        var gruppe = new Gruppe();
+                        var überschrift = reader.ReadLine();
+                        int i = 1;
 
-                        string line = reader.ReadLine();
-
-                        try
+                        while (true)
                         {
-                            if (line != null)
+                            i++;
+                            var gruppe = new Gruppe();
+
+                            string line = reader.ReadLine();
+
+                            try
                             {
-                                var x = line.Split('\t');
+                                if (line != null)
+                                {
+                                    var x = line.Split('\t');
 
-                                gruppe = new Gruppe();
-                                gruppe.MarksPerLessonZeile = i;
-                                gruppe.StudentId = Convert.ToInt32(x[0]);
-                                gruppe.Gruppenname = x[3];
-                                gruppe.Fach = x[4];
-                                try
-                                {
-                                    gruppe.Startdate = DateTime.ParseExact(x[5], "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
-                                }
-                                catch (Exception)
-                                {
-                                }
+                                    gruppe = new Gruppe();
+                                    gruppe.MarksPerLessonZeile = i;
+                                    gruppe.StudentId = Convert.ToInt32(x[0]);
+                                    gruppe.Gruppenname = x[3];
+                                    gruppe.Fach = x[4];
+                                    try
+                                    {
+                                        gruppe.Startdate = DateTime.ParseExact(x[5], "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                                    }
+                                    catch (Exception)
+                                    {
+                                    }
 
-                                try
-                                {
-                                    gruppe.Enddate = DateTime.ParseExact(x[6], "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
-                                }
-                                catch (Exception)
-                                {
-                                }
+                                    try
+                                    {
+                                        gruppe.Enddate = DateTime.ParseExact(x[6], "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                                    }
+                                    catch (Exception)
+                                    {
+                                    }
 
-                                this.Add(gruppe);
+                                    this.Add(gruppe);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                throw ex;
+                            }
+
+                            if (line == null)
+                            {
+                                break;
                             }
                         }
-                        catch (Exception ex)
-                        {
-                            throw ex;
-                        }
-
-                        if (line == null)
-                        {
-                            break;
-                        }
                     }
+                    Global.WriteLine("Guppen ................ " + datei.Substring((datei.LastIndexOf("\\")) + 1), this.Count);
                 }
             }
             catch (Exception ex)
             {
                 throw ex;
             }
-            finally
-            {
-                Global.WriteLine("Guppen ................ " + datei.Substring((datei.LastIndexOf("\\")) + 1), this.Count);
-            }            
         }
     }
 }

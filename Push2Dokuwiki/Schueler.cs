@@ -112,11 +112,21 @@ namespace Push2Dokuwiki
         public int OffeneStundenSeitJüngsterMaßnahme { get; internal set; }
         public int OffeneStundenSeitJüngsterVorgang { get; internal set; }
         public int NichtEntschStundenSeitJüngsterMaßnahme { get; internal set; }
-        public int OffeneStundenSeitJüngsterMaßnahmeAuchschonLängerAls14TageZurückliegen { get; internal set; }
+        public int OffeneOderNichtEntStundenSeitJüngsterMaßnahmeDieMehrAlsAnzahlTageZurückliegen { get; internal set; }
         public string MaßnahmenAlsWikiLinkAufzählung { get; internal set; }
         public object MaßnahmenAlsWikiLinkAufzählungDatum { get; internal set; }
         public int NichtEntschStundenInDenLetzten14Tagen { get; internal set; }
         public int NichtEntschStundenDiesesSchuljahr { get; internal set; }
+        public int OffeneOderNichtEntschStundenSeitJüngsterMaßnahme { get; internal set; }
+        public int OffeneOderNichtEntStundenSeitMehrAlsAnzahlTageZurückliegen { get; internal set; }
+        public int NichtVerjährteNichtEntschStundenUnbescholtene { get; internal set; }
+        public int F3 { get; internal set; }
+        public int F2 { get; internal set; }
+        public int F2MplusF3M { get; internal set; }
+        public int F2M { get; internal set; }
+        public int F3M { get; internal set; }
+        public int F2MplusF3 { get; internal set; }
+        public int F2plusF3 { get; internal set; }
 
         private string GetTabelle()
         {
@@ -399,6 +409,11 @@ namespace Push2Dokuwiki
                 }
             }
             return x.TrimEnd(',');
+        }
+
+        public string GetUrl(string v)
+        {
+            return "https://bkb.wiki/antraege_formulare:" + v + "?@Schüler*in@=" + Vorname + "_" + Nachname + "&@Klasse@=" + Klasse.NameUntis;
         }
     }
 }

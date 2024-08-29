@@ -30,5 +30,18 @@ namespace Push2Dokuwiki
         {
             Members = new List<Lehrer>();
         }
+
+        public Team(string wikiLink, List<string> klassen, List<int> jahrgänge, Unterrichts unterrichts, Lehrers lehrers)
+        {
+            Members = new List<Lehrer>();
+
+            foreach (var klasse in klassen)
+            {
+                var bildungsgang = new Bildungsgang();
+                bildungsgang.Kurzname = klasse;
+                WikiLink = wikiLink;
+                Members.AddRange(unterrichts.GetMembers(bildungsgang, lehrers, jahrgänge));
+            }
+        }
     }
 }

@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Data.OleDb;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Push2Dokuwiki
 {
@@ -21,8 +23,6 @@ namespace Push2Dokuwiki
             (DateTime.Now.Month >= 7 ? DateTime.Now.Year : DateTime.Now.Year - 1).ToString(),
             (DateTime.Now.Month >= 7 ? DateTime.Now.Year + 1 : DateTime.Now.Year).ToString()
         };
-
-        public static string WikiUrl = "https://wiki.berufskolleg-borken.de/doku.php?id=";
 
         internal static string Anrechnungen()
         {
@@ -172,18 +172,20 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
 
         internal static void Dateischreiben(string name, string datei, string dateiTemp)
         {
-            string contentNeu = File.ReadAllText(dateiTemp);
+            UTF8Encoding utf8NoBom = new UTF8Encoding(false);
+
+            string contentNeu = File.ReadAllText(dateiTemp, utf8NoBom);
 
             if (File.Exists(datei) && File.Exists(dateiTemp))
             {
                 // Lese den Inhalt der Dateien
-                string contentAlt = File.ReadAllText(datei);
+                string contentAlt = File.ReadAllText(datei, utf8NoBom);
 
                 // Vergleiche die Inhalte der Dateien
                 if (contentAlt != contentNeu)
                 {
                     // Überschreibe alt mit dem Inhalt von neu
-                    File.WriteAllText(datei, contentNeu);
+                    File.WriteAllText(datei, contentNeu, utf8NoBom);
                     Console.WriteLine(" " + datei.Substring((datei.LastIndexOf("\\")) + 1) + ": " + datei + " überschrieben.");
                 }
                 else
@@ -193,7 +195,7 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
             }
             if (!File.Exists(datei))
             {
-                File.WriteAllText(datei, contentNeu);
+                File.WriteAllText(datei, contentNeu, utf8NoBom);
                 Global.WriteLine(" " + name, datei.Substring((datei.LastIndexOf("\\")) + 1) + ": Datei neu erstellt.");
             }
         }
@@ -221,32 +223,53 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
             return result.ToString();
         }
 
-        public static string CheckFile(string kriterium, DateTime zeitpunkt)
+        public static string CheckFile(string kriterium, int sovieleTageDarfDieDateiMaxAltSein)
         {
             var sourceFile = (from f in Directory.GetFiles(@"c:\users\" + Global.User + @"\Downloads", "*.csv", SearchOption.AllDirectories) where f.Contains(kriterium) orderby File.GetLastWriteTime(f) select f).LastOrDefault();
 
-            if (sourceFile == null || new FileInfo(sourceFile).LastWriteTime.Date < zeitpunkt.Date)
+            if (
+                sourceFile == null || 
+                new FileInfo(sourceFile).LastWriteTime.Date < DateTime.Now.Date.AddDays(-(sovieleTageDarfDieDateiMaxAltSein)) ||
+                new FileInfo(sourceFile).Length == 0
+                )
             {
                 if (sourceFile == null)
                 {
-                    Console.WriteLine("Die Datei " + sourceFile + " existiert nicht.");                    
+                    Console.WriteLine("Die Datei " + kriterium + ".csv existiert nicht.");                    
                 }
                 else
                 {
-                    Global.WriteLine("Die Datei " + sourceFile + " existiert, ist aber älter als " , zeitpunkt.Date.ToShortDateString());
+                    if (new FileInfo(sourceFile).LastWriteTime.Date < DateTime.Now.Date.AddDays(-(sovieleTageDarfDieDateiMaxAltSein)))
+                    {
+                        Global.WriteLine("Die Datei " + sourceFile + " existiert, ist aber älter als ", sovieleTageDarfDieDateiMaxAltSein + " " + (sovieleTageDarfDieDateiMaxAltSein > 1 ? "Tage" : "Tag"));
+                    }
+                    else
+                    {
+                        Global.WriteLine("Die Datei " + sourceFile + " existiert, ist aber leer",0);
+                    }
                 }
+                               
 
                 if (kriterium.Contains("termine"))
                 {
-                    Console.WriteLine(" Exportieren Sie " + sourceFile + "frisch aus Outlook:");
+                    Console.WriteLine("  Exportieren Sie Export_aus_Outlook_" + kriterium + ".csv frisch aus Outlook:");
                     Console.WriteLine("  1. Ansicht in Outlook auf Liste ändern.");
                     Console.WriteLine("  2. *Beginn* muss in der ersten Spalte stehen.");
+                    Console.WriteLine("  3. Alle Listeneinträge markieren");
+                    Console.WriteLine("  4. Zwischenablage in Export_aus_Outlook_" + kriterium + ".csv fallenlassen.");
+                    
+                    if (!File.Exists(@"c:\users\" + Global.User + @"\Downloads\Export_aus_Outlook_" + kriterium + ".csv"))
+                    {
+                        File.Create(@"c:\users\" + Global.User + @"\Downloads\Export_aus_Outlook_" + kriterium + ".csv").Close();
+                        Console.WriteLine("Die Export_aus_Outlook_" + kriterium + ".csv wurde leer angelegt.");
+                    }
+                    Process.Start(@"c:\users\" + Global.User + @"\Downloads\Export_aus_Outlook_" + kriterium + ".csv");                    
                 }
                 else
                 {
                     if (kriterium.Contains("Student_"))
                     {
-                        Console.WriteLine(" Exportieren Sie die Datei frisch aus Webuntis, indem Sie als Administrator:");
+                        Console.WriteLine("  Exportieren Sie die Datei frisch aus Webuntis, indem Sie als Administrator:");
                         Console.WriteLine("   1. Stammdaten > Schülerinnen");
                         Console.WriteLine("   2. \"Berichte\" auswählen");
                         Console.WriteLine("   3. Bei \"Schüler\" auf CSV klicken");
@@ -259,7 +282,7 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
 
                     if (kriterium.Contains("MarksPerLesson") || kriterium.Contains("AbsencePerStudent"))
                     {
-                        Console.WriteLine(" Exportieren Sie die Datei frisch aus Webuntis, indem Sie als Administrator:");
+                        Console.WriteLine("  Exportieren Sie die Datei frisch aus Webuntis, indem Sie als Administrator:");
                         Console.WriteLine("   1. Klassenbuch > Berichte klicken");
 
                         if (kriterium.Contains("MarksPerLesson"))
@@ -287,7 +310,7 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
                     {
                         if (kriterium.Contains("MarksPerLesson") || kriterium.Contains("AbsencePerStudent"))
                         {
-                            Console.WriteLine(" Exportieren Sie die Datei frisch aus Webuntis, indem Sie als Administrator:");
+                            Console.WriteLine("  Exportieren Sie die Datei frisch aus Webuntis, indem Sie als Administrator:");
                             Console.WriteLine("   1. Klassenbuch > Berichte klicken");
 
                             if (kriterium.Contains("MarksPerLesson"))
@@ -313,7 +336,7 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
                         }
                         else
                         {
-                            Console.WriteLine(" Exportieren Sie die Datei frisch aus Webuntis, indem Sie als Administrator:");
+                            Console.WriteLine("  Exportieren Sie die Datei frisch aus Webuntis, indem Sie als Administrator:");
                             Console.WriteLine("   1. Administration > Export klicken");
                             Console.WriteLine("   2. Zeitraum begrenzen, also die Woche der Zeugniskonferenz und vergange Abschnitte herauslassen");
                             Console.WriteLine("   2. Das CSV-Icon hinter Gesamtfehlzeiten klicken");

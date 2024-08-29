@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Push2Dokuwiki
@@ -15,19 +16,24 @@ namespace Push2Dokuwiki
         {
         }
 
-        public Termine(string kriterium, DateTime dateTime)
+        public Termine(string kriterium, int sovieleTageDarfDieDateiMaxAltSein, string nachrichtEnthält, Encoding encoding)
         {
             string datei = "";
+            int zeile = 1;
+            var termine = new Termine();
 
             try
             {
-                datei = Global.CheckFile(kriterium, dateTime);
+                datei = Global.CheckFile(kriterium, sovieleTageDarfDieDateiMaxAltSein);
 
                 if (datei == null) { return; }
-                int zeile = 1;
-                using (var reader = new StreamReader(datei))
+
+                using (var reader = new StreamReader(datei, encoding))
                 {
                     var kopfzeile = reader.ReadLine();
+
+                    if (kopfzeile == null)
+                    { return; }
                     var values = new List<string>();
                     values.AddRange(kopfzeile.Split('\t'));
                     int anzahlSpalten = 0;
@@ -99,16 +105,17 @@ namespace Push2Dokuwiki
                         {
                             beschriftung = i;
                             anzahlSpalten++;
-                        }                       
+                        }
                     }
 
                     while (!reader.EndOfStream)
                     {
                         Termin termin = new Termin();
+                        var line = reader.ReadLine();
+                        zeile++;
 
                         try
                         {
-                            var line = reader.ReadLine();
                             values = new List<string>();
                             values.AddRange(line.Split('\t'));
 
@@ -120,22 +127,22 @@ namespace Push2Dokuwiki
                                     CultureInfo provider = new CultureInfo("de-DE");
                                     // Wenn sich die erste Spalte nicht in ein Datum parsen lässt,
                                     // dann ist das vermutlich die umgebrochene Nachricht der Zeile zuvor.
-                                    termin.Datum = DateTime.ParseExact(values[beginn], format, provider);                                    
+                                    termin.Datum = DateTime.ParseExact(values[beginn], format, provider);
 
                                     if (betreff >= 0)
                                     {
-                                        termin.Betreff = values[betreff];                                        
+                                        termin.Betreff = values[betreff];
                                     }
                                     if (ende >= 0)
                                     {
                                         var e = DateTime.ParseExact(values[ende], format, provider);
                                         if (e.Year <= 1)
                                         {
-                                            termin.EndeDatum = termin.Datum;                                            
+                                            termin.EndeDatum = termin.Datum;
                                         }
                                         else
                                         {
-                                            termin.EndeDatum = DateTime.ParseExact(values[ende], format, provider);                                            
+                                            termin.EndeDatum = DateTime.ParseExact(values[ende], format, provider);
                                         }
                                         termin.SJ = new List<string>();
 
@@ -143,14 +150,14 @@ namespace Push2Dokuwiki
                                         {
                                             termin.SJ.Add("aktuelles");
                                         }
-                                        if (new DateTime(Convert.ToInt32(Global.AktSj[1]), 8, 1) < termin.Datum && termin.Datum < new DateTime(Convert.ToInt32(Global.AktSj[1]) +1 , 7, 31))
+                                        if (new DateTime(Convert.ToInt32(Global.AktSj[1]), 8, 1) < termin.Datum && termin.Datum < new DateTime(Convert.ToInt32(Global.AktSj[1]) + 1, 7, 31))
                                         {
                                             termin.SJ.Add("kommendes");
                                         }
                                         if (new DateTime(Convert.ToInt32(Global.AktSj[0]) - 1, 8, 1) < termin.Datum && termin.Datum < new DateTime(Convert.ToInt32(Global.AktSj[1]) - 1, 7, 31))
                                         {
                                             termin.SJ.Add("vorheriges");
-                                        }                                        
+                                        }
                                     }
                                     if (kategorien >= 0)
                                     {
@@ -187,31 +194,46 @@ namespace Push2Dokuwiki
                                     if (beschriftung >= 0)
                                     {
                                         termin.Beschriftung = (values[beschriftung] != null && values[beschriftung] != "") ? Convert.ToString(values[beschriftung]) : "";
-                                    }                                    
-                                    this.Add(termin);
-                                    zeile++;
+                                    }
+
+                                    termine.Add(termin);
+
                                 }
                                 catch (Exception)
                                 {
                                     // Wenn die Anzahl der Einträge in der Zeile kleiner ist als
                                     // die Anzahl der Spalten, wird die Nachricht der vorherigen Zeile verlängert
 
-                                    this[this.Count - 1].Nachricht += " " + values[0];
-                                }                                
+                                    if (values[0] != "")
+                                    {
+                                        termine[termine.Count - 1].Nachricht += " " + values[0];
+                                    }
+                                }
                             }
                         }
                         catch (Exception ex)
                         {
+                            Console.WriteLine("Fehler in Zeile " + zeile + "\\" + ex.ToString());
                             throw ex;
                         }
                     }
                 }
 
-                foreach (var t in this)
+                foreach (var t in termine)
                 {
-                    t.ToWikiLink();
+                    t.ToWikiLink(nachrichtEnthält);
                 }
 
+                foreach (var termin in termine)
+                {
+                    if (termin.Nachricht != null && termin.Nachricht.Contains(nachrichtEnthält))
+                    {
+                        this.Add(termin);
+                    }
+                }
+                
+                Console.WriteLine(Environment.NewLine);
+                Console.WriteLine("Es werden nur Termine exportiert, die im Nachrichtentext den Ausdruck: *"+ nachrichtEnthält + "* enthalten.");
                 Global.WriteLine("Termine ........." + datei.Substring((datei.LastIndexOf("\\")) + 1), this.Count);
             }
             catch (Exception ex)
@@ -224,6 +246,8 @@ namespace Push2Dokuwiki
 
         internal void ToCsv(List<string> kopfzeilen, string v)
         {
+            UTF8Encoding utf8NoBom = new UTF8Encoding(false);
+
             var filePath = Global.Dateipfad + v;
                         
             Type type = this[0].GetType();
@@ -245,7 +269,7 @@ namespace Push2Dokuwiki
                 return xIndex.CompareTo(yIndex);
             });
 
-            File.WriteAllText(filePath, kopfzeile.TrimEnd(',') + Environment.NewLine);
+            File.WriteAllText(filePath, kopfzeile.TrimEnd(',') + Environment.NewLine, utf8NoBom);
 
             foreach (var t in this.OrderBy(x => x.Datum))
             {
@@ -314,7 +338,7 @@ namespace Push2Dokuwiki
                                 }
                             }
                         }
-                        File.AppendAllText(filePath, zeile.TrimEnd(',') + Environment.NewLine);
+                        File.AppendAllText(filePath, zeile.TrimEnd(',') + Environment.NewLine, utf8NoBom);
                     }
                 }
             }

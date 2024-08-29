@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Push2Dokuwiki
 {
@@ -45,7 +47,7 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
                             if (klassenleitung != null)
                             {
                                 klassenleitungen.Add(klassenleitung);
-                            }                            
+                            }
                         }
 
                         bool istVollzeit = IstVollzeitKlasse(Global.SafeGetString(sqlDataReader, 1));
@@ -59,7 +61,7 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
                         klasse.IstVollzeit = istVollzeit;
                         klasse.Stufe = Global.SafeGetString(sqlDataReader, 5); // BS-35J-01
                         klasse.WikiLink = Global.SafeGetString(sqlDataReader, 7);
-                        
+
                         if (klasse.BildungsgangLangname.Contains("("))
                         {
                             klasse.BildungsgangGekürzt = klasse.BildungsgangLangname.Substring(0, klasse.BildungsgangLangname.IndexOf('(')).Trim();
@@ -112,7 +114,7 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
         private bool IstVollzeitKlasse(string klassenname)
         {
             var vollzeitBeginn = new List<string>() { "BS", "BW", "BT", "FM", "FS", "G", "HB" };
-            
+
             foreach (var item in vollzeitBeginn)
             {
                 if (klassenname.StartsWith(item))
@@ -138,7 +140,7 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
                             members.Add(klassenleitung.Mail);
                         }
                     }
-                }                
+                }
             }
             return members;
         }
@@ -147,20 +149,33 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
         {
             var klassenMitAbwesenheiten = new Klasses();
 
-            foreach(var klasse in this)
+            foreach (var klasse in this)
             {
                 if ((from a in abwesenheiten where a.Klasse == klasse.NameUntis select a).Any())
                 {
                     klasse.Abwesenheiten = new Abwesenheiten();
                     klasse.Abwesenheiten.AddRange((from a in abwesenheiten
-                                                 where a.Klasse == klasse.NameUntis
-                                                 select a).ToList());
+                                                   where a.Klasse == klasse.NameUntis
+                                                   select a).ToList());
                     klassenMitAbwesenheiten.Add(klasse);
                 }
             }
             Console.WriteLine(("Klassen mit Abwesenheiten" + ".".PadRight(klassenMitAbwesenheiten.Count / 150, '.')).PadRight(48, '.') + (" " + klassenMitAbwesenheiten.Count).ToString().PadLeft(4), '.');
 
             return klassenMitAbwesenheiten;
+        }
+
+        internal void Csv(string v)
+        {
+            UTF8Encoding utf8NoBom = new UTF8Encoding(false);
+            var filePath = Global.Dateipfad + v;
+
+            File.WriteAllText(filePath, "\"Name\",\"Klassenleitung\",\"Klassensprecher\",\"Klassensprecher2\"" + Environment.NewLine, utf8NoBom);
+
+            foreach (var l in this.OrderBy(x => x.NameUntis))
+            {
+                File.AppendAllText(filePath, "\"" + l.NameUntis + "\",\"" + string.Join(",", (from le in l.Klassenleitungen select le.Kürzel).ToList()) + "\",\"" + "" + "\",\"\"" + Environment.NewLine, utf8NoBom);
+            }
         }
     }
 }

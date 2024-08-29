@@ -5,6 +5,8 @@ using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Push2Dokuwiki
 {
@@ -17,59 +19,59 @@ namespace Push2Dokuwiki
         {
         }
 
-        public Unterrichts(string kriterium, DateTime dateTime)
+        public Unterrichts(string kriterium, int sovieleTageDarfDieDateiMaxAltSein)
         {
             string datei = "";
 
             try
             {
-                datei = Global.CheckFile(kriterium, dateTime);
+                datei = Global.CheckFile(kriterium, sovieleTageDarfDieDateiMaxAltSein);
 
-                using (StreamReader reader = new StreamReader(datei))
+                if (datei != null)
                 {
-                    var überschrift = reader.ReadLine();
-                    int i = 1;
-
-                    while (true)
+                    using (StreamReader reader = new StreamReader(datei))
                     {
-                        i++;
-                        Unterricht unterricht = new Unterricht();
+                        var überschrift = reader.ReadLine();
+                        int i = 1;
 
-                        string line = reader.ReadLine();
-
-                        if (line != null)
+                        while (true)
                         {
-                            var x = line.Split('\t');
+                            i++;
+                            Unterricht unterricht = new Unterricht();
 
-                            unterricht = new Unterricht();
-                            unterricht.LessonNumbers = new List<int>();
-                            unterricht.Zeile = i;
-                            unterricht.LessonId = Convert.ToInt32(x[0]);
-                            unterricht.LessonNumbers.Add(Convert.ToInt32(x[1]) / 100);
-                            unterricht.Fach = x[2];
-                            unterricht.Lehrkraft = x[3];
-                            unterricht.Klassen = x[4];
-                            unterricht.Gruppe = x[5];
-                            unterricht.Periode = Convert.ToInt32(x[6]);
-                            unterricht.Startdate = DateTime.ParseExact(x[7], "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
-                            unterricht.Enddate = DateTime.ParseExact(x[8], "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
-                            this.Add(unterricht);
-                        }
+                            string line = reader.ReadLine();
 
-                        if (line == null)
-                        {
-                            break;
+                            if (line != null)
+                            {
+                                var x = line.Split('\t');
+
+                                unterricht = new Unterricht();
+                                unterricht.LessonNumbers = new List<int>();
+                                unterricht.Zeile = i;
+                                unterricht.LessonId = Convert.ToInt32(x[0]);
+                                unterricht.LessonNumbers.Add(Convert.ToInt32(x[1]) / 100);
+                                unterricht.Fach = x[2];
+                                unterricht.Lehrkraft = x[3];
+                                unterricht.Klassen = x[4];
+                                unterricht.Gruppe = x[5];
+                                unterricht.Periode = Convert.ToInt32(x[6]);
+                                unterricht.Startdate = DateTime.ParseExact(x[7], "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                                unterricht.Enddate = DateTime.ParseExact(x[8], "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                                this.Add(unterricht);
+                            }
+
+                            if (line == null)
+                            {
+                                break;
+                            }
                         }
                     }
+                    Global.WriteLine("Unterrichte ........... " + datei.Substring((datei.LastIndexOf("\\")) + 1), this.Count);
                 }
             }
             catch (Exception ex)
             {
                 throw ex;
-            }
-            finally
-            {
-                Global.WriteLine("Unterrichte ........... " + datei.Substring((datei.LastIndexOf("\\")) + 1), this.Count);                
             }
         }
 
@@ -104,7 +106,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND ((TERM_I
                     odbcConnection.Open();
                     SqlDataReader sqlDataReader = odbcCommand.ExecuteReader();
 
-                    
+
                     while (sqlDataReader.Read())
                     {
                         id = sqlDataReader.GetInt32(0);
@@ -295,7 +297,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND ((TERM_I
                             }
                             catch (Exception)
                             {
-                                Console.WriteLine("Fehler beim Unterricht: " +  id);
+                                Console.WriteLine("Fehler beim Unterricht: " + id);
                             }
                         }
                     }
@@ -313,7 +315,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND ((TERM_I
                 }
             }
         }
-        
+
         internal List<Lehrer> Fhr(Lehrers lehrers)
         {
             var members = new Lehrers();
@@ -321,11 +323,11 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND ((TERM_I
             foreach (var unterricht in this)
             {
                 if (
-                    unterricht.KlasseKürzel.StartsWith("HBW") || 
-                    unterricht.KlasseKürzel.StartsWith("HBT") || 
-                    unterricht.KlasseKürzel.StartsWith("HBG") || 
-                    unterricht.KlasseKürzel.StartsWith("BS") || 
-                    unterricht.KlasseKürzel.StartsWith("FM") || 
+                    unterricht.KlasseKürzel.StartsWith("HBW") ||
+                    unterricht.KlasseKürzel.StartsWith("HBT") ||
+                    unterricht.KlasseKürzel.StartsWith("HBG") ||
+                    unterricht.KlasseKürzel.StartsWith("BS") ||
+                    unterricht.KlasseKürzel.StartsWith("FM") ||
                     unterricht.KlasseKürzel.StartsWith("FS"))
                 {
                     var lehrer = (from l in lehrers where l.Kürzel == unterricht.LehrerKürzel select l).FirstOrDefault();
@@ -338,7 +340,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND ((TERM_I
             }
 
             var mm = new List<Lehrer>();
-                        
+
             foreach (var item in members.OrderBy(x => x.Nachname))
             {
                 mm.Add(item);
@@ -510,7 +512,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND ((TERM_I
                 throw new Exception(ex.ToString());
             }
         }
-        
+
         public Unterrichts Kumulieren()
         {
             try
@@ -552,54 +554,63 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND ((TERM_I
             }
         }
 
-        internal Lehrers GetMembers(Bildungsgang bildungsgang, Lehrers lehrers, Unterrichts unterrichts)
+        internal List<Lehrer> GetMembers(Bildungsgang bildungsgang, Lehrers lehrers, List<int> jahrgänge)
         {
-            List<Lehrer> lehrer = new List<Lehrer>();
+            List<Lehrer> members = new List<Lehrer>();
 
             foreach (var unterricht in this)
-            {                
-                if ((unterricht.KlasseKürzel.StartsWith(bildungsgang.Kurzname) || unterricht.KlasseKürzel.Contains("," + bildungsgang.Kurzname) && unterricht.KlasseKürzel.Any(c => char.IsDigit(c))))
-                    {
-                    if (bildungsgang.Kurzname.StartsWith("BT"))
-                    {
-                        string aaa = "";
-                    }
-                    var leh = (from l in lehrers 
-                               where l.Kürzel == unterricht.LehrerKürzel 
-                               where unterricht.KlasseKürzel.Any(c => char.IsDigit(c))
-                               select l).FirstOrDefault();
-
-                    if (leh != null && !(from l in lehrer where l.Mail == leh.Mail select l).Any())
-                    {
-                        lehrer.Add(leh);
-                    }
-                }
-            }
-
-            var llll = new Lehrers();
-
-            foreach (var leh in lehrer.OrderBy(x=>x.Nachname)) 
             {
-                if (!(from ll in llll where ll.Mail == leh.Mail select ll).Any())
+                if ((unterricht.KlasseKürzel.ToLower().StartsWith(bildungsgang.Kurzname.ToLower()) && unterricht.KlasseKürzel.Any(c => char.IsDigit(c))))
                 {
-                    if (leh.Vorname != null && leh.Vorname != "" && leh.Nachname!= null && leh.Nachname != "")
+                    if (JahrgangPasst(unterricht.KlasseKürzel, jahrgänge))
                     {
-                        llll.Add(leh);
-                    }
-                    else
-                    {
-                        Console.WriteLine(leh.Kürzel + " hat keinen Vor- und Nachnamen");
+                        var leh = (from l in lehrers where l.Kürzel == unterricht.LehrerKürzel select l).FirstOrDefault();
+
+                        if (leh != null && !(from l in members where l.Mail == leh.Mail select l).Any())
+                        {
+                            if (!(from m in members where m.Mail == leh.Mail select m).Any())
+                            {
+                                members.Add(leh);
+                            }
+                        }
                     }
                 }
             }
 
-            return llll;
+            return members;
+        }
+
+        private bool JahrgangPasst(string klassenkürzel, List<int> jahrgänge)
+        {
+            foreach (var jahrgang in jahrgänge)
+            {
+                if (ExtractNumber(klassenkürzel) == (Convert.ToInt32(Global.AktSj[0]) - 2000 + 1 - jahrgang) || klassenkürzel.Contains("FM2"))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private int ExtractNumber(string input)
+        {
+            // Der reguläre Ausdruck, der eine oder mehrere Ziffern findet
+            Match match = Regex.Match(input, @"\d+");
+
+            // Wenn ein Match gefunden wird, gib die übereinstimmende Zahl zurück
+            if (match.Success)
+            {
+                return Convert.ToInt32(match.Value);
+            }
+
+            // Rückgabe eines leeren Strings, wenn keine Zahl gefunden wird
+            return -99;
         }
 
         internal List<Lehrer> Fachschaften(Lehrers lehrers, List<string> fächer)
         {
             var fachlehrers = new List<Lehrer>();
-            
+
             try
             {
                 foreach (var u in (from t in this where fächer.Contains(t.FachKürzel) select t).ToList())

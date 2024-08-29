@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace Push2Dokuwiki
@@ -24,10 +25,12 @@ namespace Push2Dokuwiki
         public DateTime EndeDatum { get; internal set; }
         public List<string> SJ { get; internal set; }
 
-        internal void ToWikiLink()
+        internal void ToWikiLink(string nachrichtEnthält)
         {            
             if (!string.IsNullOrEmpty(Nachricht))
             {
+                Hinweise = Nachricht.Trim();
+
                 // Regex-Muster für Hyperlinks
                 string pattern = @"http[s]?://[^\s]+";
 
@@ -42,9 +45,10 @@ namespace Push2Dokuwiki
                 // Gefundene Hyperlinks ausgeben
                 foreach (Match match in matches)
                 {   
-                    if (match.Value.Contains("wiki.berufskolleg") || match.Value.Contains("bkb.wiki"))
+                    if (match.Value.Contains(nachrichtEnthält))
                     {
-                        Seite.Add("[[" + match.Value.Replace(Global.WikiUrl, "").TrimEnd('>') + "]]");
+                        Seite.Add(match.Value.Replace(nachrichtEnthält, "").TrimEnd('>'));
+                        Hinweise = Hinweise.Replace(match.ToString(), "").Trim();
                     }
                 }
             }

@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
+using System.Text;
 using System.Text.RegularExpressions;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -177,7 +178,13 @@ ORDER BY CountValue.TEACHER_ID;
                         {
                             if (anrechnung.Grund == 0 || anrechnung.Grund > 210 || anrechnung.Grund == 200 || anrechnung.Beschr == "Interessen") // Schwerbehinderung etc. nicht einlesen
                             {
-                                this.Add(anrechnung);
+                                if (anrechnung.Lehrer != null)
+                                {
+                                    if (anrechnung.Lehrer.Kürzel != null && anrechnung.Lehrer.Kürzel != "")
+                                    {
+                                        this.Add(anrechnung);
+                                    }
+                                }
                             }
                         }                         
                     };
@@ -227,65 +234,80 @@ ORDER BY CountValue.TEACHER_ID;
             return "";
         }
 
-        internal void UntisAnrechnungsCsv(string tempdatei, List<int> nurDieseGründe, List<int> fürDieseGründeKeinenWert, List<string> fürDieseLehrerKeineWerte)
+        internal void UntisAnrechnungsToCsv(string datei, List<int> nurDieseGründe, List<int> fürDieseGründeKeinenWert, List<string> fürDieseLehrerKeineWerte)
         {
-            var datei = Global.Dateipfad + tempdatei;
-            int lastSlashIndex = tempdatei.LastIndexOf('\\');
-            string result = (lastSlashIndex != -1) ? tempdatei.Substring(lastSlashIndex + 1) : tempdatei;
-            tempdatei = System.IO.Path.GetTempPath() + result;
+            UTF8Encoding utf8NoBom = new UTF8Encoding(false);
+            var filePath = Global.Dateipfad + datei;
 
-            File.WriteAllText(tempdatei, "\"Name\",\"Kuerzel\",\"Mail\",\"Wert\",\"von\",\"bis\",\"Rolle\",\"Amt\",\"Grund\",\"Beschreibung\",\"Hinweis\",\"Kategorien\"" + Environment.NewLine);
+            File.WriteAllText(filePath, "\"Name\",\"Kuerzel\",\"Mail\",\"Wert\",\"von\",\"bis\",\"Rolle\",\"Amt\",\"Grund\",\"Beschreibung\",\"Hinweis\",\"Kategorien\"" + Environment.NewLine, utf8NoBom);
 
             foreach (var a in this.OrderBy(x => x.Lehrer.Kürzel))
-            {   
+            {
                 if (nurDieseGründe.Contains(a.Grund))
                 {
                     var wert = (a.Wert == 0 ? "" : a.Wert.ToString());
-                                        
+
                     if (!fürDieseGründeKeinenWert.Contains(a.Grund))
                     {
                         wert = "";
                     }
-                    
+
                     if (fürDieseLehrerKeineWerte.Contains(a.Lehrer.Kürzel))
                     {
                         wert = "";
                     }
 
-                        var kategorien = "";
-                    foreach (var c in a.Kategorien) 
+                    var kategorien = "";
+                    foreach (var c in a.Kategorien)
                     {
                         kategorien += c + ",";
                     }
 
-                    File.AppendAllText(tempdatei, "\"" + (a.Lehrer.Titel == "" ? "" : a.Lehrer.Titel + " ") + a.Lehrer.Vorname + " " + a.Lehrer.Nachname + "\",\"" + a.Lehrer.Kürzel + "\",\"" + a.Lehrer.Mail + "\",\"" + wert + "\",\"" + (a.Von.Year == 1 ? "" : a.Von.ToShortDateString()) + "\",\"" + (a.Bis.Year == 1 ? "" : a.Bis.ToShortDateString()) + "\",\"" + a.Rolle + "\",\"" + a.Amt + "\",\"" + a.Grund + "\",\"" + (a.Beschr == "" ? "" : "[[" + a.Beschr + "]]") + "\",\"" + a.Hinweis + "\",\"" + kategorien.TrimEnd(',') + "\"" + Environment.NewLine);
+                    File.AppendAllText(filePath, "\"" + (a.Lehrer.Titel == "" ? "" : a.Lehrer.Titel + " ") + a.Lehrer.Vorname + " " + a.Lehrer.Nachname + "\",\"" + a.Lehrer.Kürzel + "\",\"" + a.Lehrer.Mail + "\",\"" + wert + "\",\"" + (a.Von.Year == 1 ? "" : a.Von.ToShortDateString()) + "\",\"" + (a.Bis.Year == 1 ? "" : a.Bis.ToShortDateString()) + "\",\"" + a.Rolle + "\",\"" + a.Amt + "\",\"" + a.Grund + "\",\"" + (a.Beschr == "" ? "" : "[[" + a.Beschr + "]]") + "\",\"" + a.Hinweis + "\",\"" + kategorien.TrimEnd(',') + "\"" + Environment.NewLine, utf8NoBom);
                 }
             }
-
-            Global.Dateischreiben(result, datei, tempdatei);
         }
 
         internal Lehrer GetBildungsgangleitung(Bildungsgang bildungsgang, Lehrers lehrers)
         {
             foreach (var a in this)
             {
-                if (a.TextGekürzt.Contains("Gärt"))
-                {
-                    string aaa = "";
-                }
                 if (a.Text != null && a.Text != "" && a.Text.Contains("Bildungsgangleitung"))
                 {
-                    if (bildungsgang.Langname != null && bildungsgang.Langname != "" && (bildungsgang.Langname.Contains(a.TextGekürzt)))
+                    if (bildungsgang.Langname != null && bildungsgang.Langname != "" && (a.Beschr.ToLower().EndsWith(bildungsgang.Kurzname.ToLower() + ":start")))
                     {
                         if (a.TeacherIdUntis != 0)
                         {
-                            return (from l in lehrers where a.TeacherIdUntis == l.IdUntis select l).FirstOrDefault();
+                            if (a.TeacherIdUntis != 0)
+                            {
+                                return (from l in lehrers where a.TeacherIdUntis == l.IdUntis select l).FirstOrDefault();
+                            }
                         }
                     }
                 }
             }
             var x = "Keine Bildungsgangleitung bei " + bildungsgang.Kurzname + ". Stimmt der Text in der Anrechnung mit dem Langnamen in den Klassenstammdaten überein? Im Text der Anrechnung muss das Wort Bildungsgangleitung in Klammern stehen. Zusätzlich muss der Langname der Klassen im Text der Anrechnungen enthalten sein.";
             Console.WriteLine(Global.InsertLineBreaks(x,77));
+            return null;
+        }
+
+        internal string GetWikiLink(Bildungsgang bildungsgang, Lehrers lehrers)
+        {
+            foreach (var a in this)
+            {
+                if (a.Text != null && a.Text != "" && a.Text.Contains("Bildungsgangleitung"))
+                {
+                    if (bildungsgang.Langname != null && bildungsgang.Langname != "" && (a.Beschr.ToLower().EndsWith(bildungsgang.Kurzname.ToLower() + ":start")))
+                    {
+                        if (a.TeacherIdUntis != 0)
+                        {
+                            return a.Beschr;
+                        }
+                    }
+                }
+            }
+            var x = "Kein Wikilink.";
+            Console.WriteLine(Global.InsertLineBreaks(x, 77));
             return null;
         }
 

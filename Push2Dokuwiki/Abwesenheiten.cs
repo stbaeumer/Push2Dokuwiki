@@ -13,13 +13,13 @@ namespace Push2Dokuwiki
         {
         }
 
-        public Abwesenheiten(string kriterium, DateTime dateTime)
+        public Abwesenheiten(string kriterium, int sovieleTageDarfDieDateiMaxAltSein)
         {
             string datei = "";
 
             try
             {
-                datei = Global.CheckFile(kriterium, dateTime);  
+                datei = Global.CheckFile(kriterium, sovieleTageDarfDieDateiMaxAltSein);  
                 
                 int zeile = 1;
                 using (var reader = new StreamReader(datei))

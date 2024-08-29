@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Push2Dokuwiki
@@ -591,25 +592,21 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
             Global.Dateischreiben(result, datei, tempdatei);
         }
 
-        internal void LulCsv(string tempDateiOrdner)
+        internal void LulToCsv(string v)
         {
-            var zielOrdnerUndDatei = Global.Dateipfad + tempDateiOrdner;
-            int lastSlashIndex = tempDateiOrdner.LastIndexOf('\\');
-            string datei = (lastSlashIndex != -1) ? tempDateiOrdner.Substring(lastSlashIndex + 1) : tempDateiOrdner;
-            tempDateiOrdner = System.IO.Path.GetTempPath() + datei;
-                        
-            File.WriteAllText(tempDateiOrdner, "\"Kürzel\",\"Vorname\",\"Nachname\",\"Name\",\"Mail\"" + Environment.NewLine);
+            UTF8Encoding utf8NoBom = new UTF8Encoding(false);
+            var filePath = Global.Dateipfad + v;
+
+            File.WriteAllText(filePath, "\"Kürzel\",\"Vorname\",\"Nachname\",\"Name\",\"Mail\"" + Environment.NewLine, utf8NoBom);
             
             foreach (var l in this.OrderBy(x => x.Nachname))
             {
                 // Das Deputat unterscheidet LuL von Mitarbeitern
                 if (l.Deputat != 0)
                 {
-                    File.AppendAllText(tempDateiOrdner, "\"" + l.Kürzel + "\",\"" + l.Vorname + "\",\"" + l.Nachname + "\",\"" + (l.Titel == "" ? "" : l.Titel + " ") + l.Vorname + " " + l.Nachname + "\",\"" + l.Mail + "\"" + Environment.NewLine);
+                    File.AppendAllText(filePath, "\"" + l.Kürzel + "\",\"" + l.Vorname + "\",\"" + l.Nachname + "\",\"" + (l.Titel == "" ? "" : l.Titel + " ") + l.Vorname + " " + l.Nachname + "\",\"" + l.Mail + "\"" + Environment.NewLine, utf8NoBom);
                 }                
             }
-
-            Global.Dateischreiben(datei, zielOrdnerUndDatei, tempDateiOrdner);
         }
 
         internal void AnrechnungenCsv(string tempdatei)
