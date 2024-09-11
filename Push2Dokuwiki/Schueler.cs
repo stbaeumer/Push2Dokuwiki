@@ -105,7 +105,7 @@ namespace Push2Dokuwiki
         public string Zeile { get; internal set; }
         public string Jahrgang { get; internal set; }
         public int UnenschuldigteFehlstunden { get; internal set; }
-        public Maßnahme JüngsteMaßnahme { get; internal set; }
+        public Maßnahme JüngsteMaßnahmeInDiesemSj { get; internal set; }
         public Vorgang JüngsterVorgang { get; internal set; }
         public string JüngsteEskalation { get; internal set; }
         public string AlleMaßnahmenUndVorgänge { get; internal set; }
@@ -347,16 +347,16 @@ namespace Push2Dokuwiki
 
         internal string GetJüngsteEskalation()
         {
-            if (JüngsteMaßnahme.Datum == JüngsterVorgang.Datum)
+            if (JüngsteMaßnahmeInDiesemSj.Datum == JüngsterVorgang.Datum)
             {
                 // seit SJ-Beginn
                 return "dem Schuljahresbeginn";
             }
             else
             {
-                if (JüngsteMaßnahme.Datum > JüngsterVorgang.Datum)
+                if (JüngsteMaßnahmeInDiesemSj.Datum > JüngsterVorgang.Datum)
                 {
-                    return "der " + JüngsteMaßnahme.Kürzel + " (" + JüngsteMaßnahme.Datum.ToShortDateString() + ")";
+                    return "der " + JüngsteMaßnahmeInDiesemSj.Kürzel + " (" + JüngsteMaßnahmeInDiesemSj.Datum.ToShortDateString() + ")";
                 }
                 else
                 {
@@ -368,21 +368,21 @@ namespace Push2Dokuwiki
         internal string GetMaßnahmenAlsWikiLinkAufzählung()
         {
             var x = "";
+            var bezeichnung = "";
+
             foreach (var item in Maßnahmen.OrderBy(y => y.Datum))
             {
-                var bezeichnung = "";
-
                 if (item.Bezeichnung.StartsWith("M") || item.Kürzel.StartsWith("M"))
                 {
-                    bezeichnung = "eskalationsstufen_erzieherische_einwirkung_ordnungsmassnahmen:mahnung";
+                    bezeichnung = "Mahnung";
                 }
                 if (item.Bezeichnung.ToLower().StartsWith("at"))
                 {
-                    bezeichnung = "eskalationsstufen_erzieherische_einwirkung_ordnungsmassnahmen:attestpflicht";
+                    bezeichnung = "Attestpflicht";
                 }
                 if (item.Bezeichnung.StartsWith("T"))
                 {
-                    bezeichnung = "konferenzen:teilkonferenz_ordnungsmassnahmen";
+                    bezeichnung = "Teilkonferenz";
                 }
                 if (bezeichnung == "")
                 {
@@ -393,9 +393,10 @@ namespace Push2Dokuwiki
                     bezeichnung = item.Kürzel;
                 }
 
-                x += "[[" + bezeichnung + "]],";
+                //x += "[[" + bezeichnung + "]],";
+                x += bezeichnung + " (" + item.Datum.ToShortDateString() + @")\\ ";
             }
-            return x.TrimEnd(',');
+            return x.TrimEnd(' '); ;
         }
 
         internal object GetMaßnahmenAlsWikiLinkAufzählungDatum()
@@ -405,15 +406,19 @@ namespace Push2Dokuwiki
             {
                 //if (item.Bezeichnung.StartsWith("M") || item.Bezeichnung.StartsWith("At") || item.Bezeichnung.StartsWith("T"))
                 {
-                    x += item.Datum.ToString("yyyy-MM-dd") + ",";
+                    x += item.Datum.ToString("yyyy-MM-dd") + " ";
                 }
             }
-            return x.TrimEnd(',');
+            return x.TrimEnd(' ');
         }
 
         public string GetUrl(string v)
         {
             return "https://bkb.wiki/antraege_formulare:" + v + "?@Schüler*in@=" + Vorname + "_" + Nachname + "&@Klasse@=" + Klasse.NameUntis;
+        }
+        internal string GetWikiLink(string v, int stunden)
+        {
+            return "[[antraege_formulare:" + v + "?@Schüler*in@=" + Vorname + "_" + Nachname + "&@Klasse@=" + Klasse.NameUntis + "&@... unentschuldigte Fehlstunden:@=" + stunden + "]]";
         }
     }
 }

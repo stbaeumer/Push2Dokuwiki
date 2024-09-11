@@ -24,6 +24,8 @@ namespace Push2Dokuwiki
                     "\n             Die Seite selbst wird nicht noch einmal eingetragen.");
                 Console.WriteLine("");
 
+                var kalenderwoche = GetKalenderwoche();
+
                 List<string> kalenders = new List<string>();
                 kalenders.Add("termine_kollegium");
                 kalenders.Add("termine_fhr");
@@ -70,9 +72,17 @@ namespace Push2Dokuwiki
                 var raums = new Raums(periode);
                 var lehrers = new Lehrers(periode, raums);
                 var klasses = new Klasses(periode, lehrers);
+
                 klasses.Csv("klassen-utf8OhneBom-einmalig-vor-SJ-Beginn.csv");
 
                 var schuelers = new Schuelers(klasses);
+
+
+                Console.WriteLine("");
+                Console.WriteLine("=============================================================================================================");
+                Console.WriteLine("");
+
+                schuelers.Reliabmelder("reliabmelder.txt");
 
                 Console.WriteLine("");
                 Console.WriteLine("=============================================================================================================");
@@ -184,24 +194,25 @@ namespace Push2Dokuwiki
                 Console.WriteLine("=============================================================================================================");
                 Console.WriteLine("");
 
-                var abwesenheiten = new Abwesenheiten("AbsencePerStudent", 14);
+                var abwesenheiten = new Abwesenheiten("AbsencePerStudent", 7);
                 var schuelerMitAbwesenheiten = schuelers.VorgängeMaßnahmenUndFehlzeitenSeitLetzterAbwesenheit(abwesenheiten, klasses, feriens);
 
                 schuelerMitAbwesenheiten.SchulpflichtüberwachungCsvTxt(
-                    @"sl\schulpflichtueberwachung.txt",
+                    "schulpflichtueberwachung.txt",
                     "schulpflichtueberwachung.csv",
-                    14, // Schonfrist: Soviele Tage hat die Klassenleitung Zeit offene St. zu bearbeiten, bevor eine Warnung ausgelöst wird.
+                    10, // Schonfrist: Soviele Tage hat die Klassenleitung Zeit offene St. zu bearbeiten, bevor eine Warnung ausgelöst wird.
                     20, // Nach so vielen unent. Stunden ohne Maßnahme wird eine Warnung ausgelöst.
                     30, // Nach so vielen Tagen verjähren unentschuldigte Fehlstunden für Unbescholtene.
                     90, // Nach so vielen Tagen verjähren unentschuldigte Fehlstunden für SuS mit Maßnahme
-                    klasses);
+                    klasses, 
+                    kalenderwoche);
 
                 Console.WriteLine("");
                 Console.WriteLine("=============================================================================================================");
                 Console.WriteLine("");
 
 
-                Kurswahlen kurswahlen = new Kurswahlen(@"berufliches_gymnasium\klausurbelegungsplaene.txt",
+                Kurswahlen kurswahlen = new Kurswahlen(@"klausurbelegungsplaene.txt",
                     (from s in schuelers where s.Klasse.NameUntis.StartsWith("G") select s).ToList(),
                     unterrichts,
                     lehrers,
@@ -220,6 +231,23 @@ namespace Push2Dokuwiki
                 Console.WriteLine(ex.Message);
                 Console.ReadKey();
             }
+        }
+
+        private static int GetKalenderwoche()
+        {
+            // Example date
+            DateTime date = DateTime.Now;
+
+            // Define the ISO 8601 calendar
+            CultureInfo ci = CultureInfo.CurrentCulture;
+            Calendar calendar = ci.Calendar;
+
+            // Define the CalendarWeekRule and the DayOfWeek for the first day of the week
+            CalendarWeekRule weekRule = CalendarWeekRule.FirstFourDayWeek;
+            DayOfWeek firstDayOfWeek = DayOfWeek.Monday;
+
+            // Get the week number for the specified date
+            return calendar.GetWeekOfYear(date, weekRule, firstDayOfWeek);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Push2Dokuwiki
         public static string User = System.Security.Principal.WindowsIdentity.GetCurrent().Name.ToUpper().Split('\\')[1];
 
         public static string Dateipfad = @"\\fs01\Wiki\push2dokuwiki-seiten\";
-        public static string DateipfadNeu = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + "\\";
+        
 
         public const string ConnectionStringUntis = @"Data Source=SQL01\UNTIS;Initial Catalog=master;Integrated Security=True";
         public const string ConnectionStringAtlantis = @"Dsn=Atlantis17u;uid=DBA";
@@ -174,10 +174,10 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
         {
             UTF8Encoding utf8NoBom = new UTF8Encoding(false);
 
-            string contentNeu = File.ReadAllText(dateiTemp, utf8NoBom);
-
             if (File.Exists(datei) && File.Exists(dateiTemp))
             {
+                string contentNeu = File.ReadAllText(dateiTemp, utf8NoBom);
+
                 // Lese den Inhalt der Dateien
                 string contentAlt = File.ReadAllText(datei, utf8NoBom);
 
@@ -195,6 +195,7 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
             }
             if (!File.Exists(datei))
             {
+                string contentNeu = File.ReadAllText(dateiTemp, utf8NoBom);
                 File.WriteAllText(datei, contentNeu, utf8NoBom);
                 Global.WriteLine(" " + name, datei.Substring((datei.LastIndexOf("\\")) + 1) + ": Datei neu erstellt.");
             }

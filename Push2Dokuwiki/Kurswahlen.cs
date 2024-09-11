@@ -36,7 +36,7 @@ namespace Push2Dokuwiki
             string hzJz
             )
         {   
-            datei = Global.DateipfadNeu + datei;
+            datei = Global.Dateipfad + datei;
 
             File.WriteAllText(datei, "====== Klausurbelegungspläne ======" + Environment.NewLine);
 
