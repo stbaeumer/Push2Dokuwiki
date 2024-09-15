@@ -490,9 +490,8 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
             }
         }
 
-        internal void SchulpflichtüberwachungCsvTxt(
+        internal void SchulpflichtüberwachungTxt(
             string tempdateiTxt,
-            string tempdateiCsv,
             int schonfrist,
             int warnungAbAnzahl,
             int verjährungUnbescholtene,
@@ -500,20 +499,12 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
             Klasses klasses,
             int kalenderwoche)
         {
-            var dateiCsv = Global.Dateipfad + tempdateiCsv;
             var dateiTxt = Global.Dateipfad + tempdateiTxt;
-            int lastSlashIndex = tempdateiCsv.LastIndexOf('\\');
-            string resultCsv = (lastSlashIndex != -1) ? tempdateiCsv.Substring(lastSlashIndex + 1) : tempdateiCsv;
+            int lastSlashIndex = tempdateiTxt.LastIndexOf('\\');
             string resultTxt = (lastSlashIndex != -1) ? tempdateiTxt.Substring(lastSlashIndex + 1) : tempdateiTxt;
             var zeilen = new List<string>();
-
-            tempdateiCsv = System.IO.Path.GetTempPath() + resultCsv;
             tempdateiTxt = System.IO.Path.GetTempPath() + resultTxt;
-
-            var belegungslisteNeu = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"\\schulpflichtueberwachung.txt";
-
-            File.WriteAllText(tempdateiCsv, "\"Klasse\",\"Klassenleitung\",\"Name\",\"AlterAmErstenSchultag\",\"Massnahmen\",\"Aussage\",\"Attestpflicht\",\"Mahnung\",\"Teilkonferenz\"" + Environment.NewLine, Encoding.UTF8);
-
+            
             File.WriteAllText(tempdateiTxt, "====== Schulpflichtüberwachung ======" + Environment.NewLine, Encoding.UTF8);
             zeilen.Add(Environment.NewLine);
             
@@ -708,13 +699,11 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
                                 }
                             }
 
-                            zeilen.Add("|" + schueler.Klasse.NameUntis.PadRight(10) + "|" + klassenleitungenString.TrimEnd(',').PadRight(16) + "  |" + name.PadRight(8) + "|" + alter + "|" + schueler.MaßnahmenAlsWikiLinkAufzählung + "  |" + aussage + "  |[[:eskalationsstufen_erzieherische_einwirkung_ordnungsmassnahmen:erzieherisches_gespraech|Erz.Gespräch]] " + attestpflichtWikiLink + " " + mahnungWikiLink + " " + teilkonferenz + "|" + Environment.NewLine);
+                            zeilen.Add("|" + schueler.Klasse.NameUntis.PadRight(10) + "|" + klassenleitungenString.TrimEnd(',').PadRight(16) + "  |" + name.PadRight(8) + "|" + alter + "|" + schueler.MaßnahmenAlsWikiLinkAufzählung + "  |" + aussage + "  |[[:eskalationsstufen_erzieherische_einwirkung_ordnungsmassnahmen|Erz.Einwirkung]] " + attestpflichtWikiLink + " " + mahnungWikiLink + " " + teilkonferenz + "|" + Environment.NewLine);
                         }
                     }
                 }
             }
-
-            Global.Dateischreiben(resultCsv, dateiCsv, tempdateiCsv);
 
             zeilen.Add("</searchtable>" + Environment.NewLine);
 
@@ -770,7 +759,7 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
             }
         }
 
-        internal Schuelers VorgängeMaßnahmenUndFehlzeitenSeitLetzterAbwesenheit(Abwesenheiten abwesenheiten, Klasses klasses, Feriens feriens)
+        internal Schuelers GetMaßnahmenUndFehlzeiten(Abwesenheiten abwesenheiten, Klasses klasses, Feriens feriens)
         {
             var maßnahmen = new Maßnahmen(abwesenheiten);
             var vorgänge = new Vorgänge(abwesenheiten);

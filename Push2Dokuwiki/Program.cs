@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using static System.Net.WebRequestMethods;
 
 namespace Push2Dokuwiki
 {
@@ -13,101 +14,36 @@ namespace Push2Dokuwiki
         {
             try
             {
-                Console.WriteLine("      Push2Dokuwiki.exe | Published under the terms of GPLv3 | Stefan Bäumer " + DateTime.Now.Year + " | Version 20240826");
-                Console.WriteLine("=============================================================================================================");
+                Console.WriteLine("      Push2Dokuwiki.exe | Published under the terms of GPLv3 | Stefan Bäumer " + DateTime.Now.Year + " | Version 20240913");
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
 
-                Console.WriteLine("");
-                Console.WriteLine("Hinweise zu Kalendereinträgen:");                
-                Console.WriteLine(" Nachricht:  Hier wird der Link zur konkreten Wiki-Seite gespeichert. So kann man aus dem Kalender ins Wiki abspringen." +
-                    "\n             In der Terminübersicht im Wiki zeigen die Links direkt auf die konkrete Seite. Weitere Einträge sind möglich. ");
-                Console.WriteLine(" Kategorien: Hier werden alle zugehörigen / übergeordneten Seiten als Kategorie eingetragen. " +
-                    "\n             Die Seite selbst wird nicht noch einmal eingetragen.");
-                Console.WriteLine("");
-
+                Global.ImportPfad = @"c:\users\" + Global.User + @"\Downloads";
+                Global.SoAltDürfenImportDateienHöchstesSein = 6;
                 var kalenderwoche = GetKalenderwoche();
-
-                List<string> kalenders = new List<string>();
-                kalenders.Add("termine_kollegium");
-                kalenders.Add("termine_fhr");
-                kalenders.Add("termine_berufliches_gymnasium");
-                kalenders.Add("termine_verwaltung");
-                
-                foreach (var kalender in kalenders)
-                {    
-                    Termine termine = new Termine();
-                    termine.AddRange(new Termine(
-                        kalender,                   // Name der CSV-Kalenderdatei
-                        1,                          // so alt darf die CSV-Datei maximal sein.
-                        "https://bkb.wiki/",        // Nur Termine mit diesem String in der Nachricht werden ausgegeben
-                        Encoding.GetEncoding(1252)  // Encoding der Importdatei
-                        ));
-
-                    if (termine.Count > 0)
-                    {
-                        // Die iteressierenden Spalten aus Dokuwiki werden hier festgelegt
-                        termine.ToCsv(new List<string>()
-                        {
-                            "Betreff",
-                            "Seite",
-                            "Hinweise",
-                            "Datum",
-                            "Kategorien",
-                            "Verantwortlich",
-                            "Ort",
-                            "Ressourcen",
-                            "SJ"
-                        }, kalender + ".csv");
-                    }
-                }
-
-                Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
-                Console.WriteLine("");
-
                 var periodes = new Periodes();
                 var periode = periodes.GetAktuellePeriode();
-                periode = 1;
                 var hzJz = (DateTime.Now.Month > 2 && DateTime.Now.Month <= 9) ? "JZ" : "HZ";
-
+                var feriens = new Feriens();
                 var raums = new Raums(periode);
                 var lehrers = new Lehrers(periode, raums);
-                var klasses = new Klasses(periode, lehrers);
-
-                klasses.Csv("klassen-utf8OhneBom-einmalig-vor-SJ-Beginn.csv");
-
+                var klasses = new Klasses(periode, lehrers, raums);                
                 var schuelers = new Schuelers(klasses);
 
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
+                                
+                // Kalender
 
-                Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
-                Console.WriteLine("");
+                var kopfzeile = "Betreff,Seite,Hinweise,Datum,Kategorien,Verantwortlich,Ort,Ressourcen,SJ";
+                var kriterium = "https://bkb.wiki/";    // Nur Termine mit diesem Nachrichteinhalt kopieren
+                var kalenders = new Kalenders(kriterium)
+                {
+                    new Kalender(kopfzeile,kriterium,"Export_aus_outlook_termine_kollegium"),
+                    new Kalender(kopfzeile,kriterium,"Export_aus_outlook_termine_fhr"),
+                    new Kalender(kopfzeile,kriterium,"Export_aus_outlook_termine_berufliches_gymnasium"),
+                    new Kalender(kopfzeile,kriterium,"Export_aus_outlook_termine_verwaltung")   
+                };
 
-                schuelers.Reliabmelder("reliabmelder.txt");
-
-                Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
-                Console.WriteLine("");
-
-                schuelers.PraktikantenToCsv(
-                    "praktikanten-utf8OhneBom-einmalig-vor-SJ-Beginn.csv", 
-                    new List<string>(){"BW,1","BT,1","BS,1", "BS,2", "HBG,1","HBT,1","HBW,1","GG,1","GT,1","GW,1","IFK,1"}                 
-                    );
-
-                Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
-                Console.WriteLine("");
-
-                var feriens = new Feriens();
-
-                Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
-                Console.WriteLine("");
-
-                lehrers.LulToCsv("lul-utf8OhneBom-einmalig-vor-SJ-Beginn.csv");
-
-                Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
-                Console.WriteLine("");
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
 
                 var anrechnungs = new Anrechnungs(periode, lehrers);
                 anrechnungs.UntisAnrechnungsToCsv(
@@ -117,33 +53,89 @@ namespace Push2Dokuwiki
                     (new List<string>() { "PLA", "BM" })            // für diese Lehrer keine Werte
                     );
 
-                Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
-                Console.WriteLine("");
-                                
-                var untisUnterrichts = new Unterrichts("ExportLessons", 14);
-                var untisGruppen = new Gruppen("StudentgroupStudents", 14);
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
+
+                // Klassenpflegschaft
+
+                klasses.KlassenpflegschaftDatenquelle("klassenpflegschaft", schuelers, lehrers, raums, anrechnungs);
+
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
+
+                // Schulpflichtüberwachung
+
+                var abwesenheiten = new Abwesenheiten("AbsencePerStudent");
+                var schuelerMitAbwesenheiten = schuelers.GetMaßnahmenUndFehlzeiten(abwesenheiten, klasses, feriens);
+
+                schuelerMitAbwesenheiten.SchulpflichtüberwachungTxt(
+                    "schulpflichtueberwachung.txt",
+                    10, // Schonfrist: Soviele Tage hat die Klassenleitung Zeit offene Stunden
+                        // zu bearbeiten, bevor eine Warnung ausgelöst wird.
+                    20, // Nach so vielen unent. Stunden ohne Maßnahme wird eine Warnung ausgelöst.
+                    30, // Nach so vielen Tagen verjähren unentschuldigte Fehlstunden für Unbescholtene.
+                    90, // Nach so vielen Tagen verjähren unentschuldigte Fehlstunden für SuS mit Maßnahme
+                    klasses,
+                    kalenderwoche
+                    );
+
+                
+
+
+
+                // Klassen
+
+                klasses.Csv("klassen-utf8OhneBom-einmalig-vor-SJ-Beginn.csv");
+
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
+
+                schuelers.Reliabmelder("reliabmelder.txt");
+
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
+
+                schuelers.PraktikantenToCsv(
+                    "praktikanten-utf8OhneBom-einmalig-vor-SJ-Beginn.csv",
+                    new List<string>() { "BW,1", "BT,1", "BS,1", "BS,2", "HBG,1", "HBT,1", "HBW,1", "GG,1", "GT,1", "GW,1", "IFK,1" }
+                    );
 
                 Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
+                Console.WriteLine("");
+
+                
+
+                Console.WriteLine("");
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
+                Console.WriteLine("");
+
+                lehrers.LulToCsv("lul-utf8OhneBom-einmalig-vor-SJ-Beginn.csv");
+
+                
+                Console.WriteLine("");
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
+                Console.WriteLine("");
+
+                var untisUnterrichts = new Unterrichts("ExportLessons");
+                var untisGruppen = new Gruppen("StudentgroupStudents");
+
+                Console.WriteLine("");
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
                 Console.WriteLine("");
 
                 var fachs = new Fachs();
                 fachs.faecherCsv("faecher.csv");
 
                 Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
                 Console.WriteLine("");
 
                 var unterrichts = new Unterrichts(periode, klasses, lehrers, fachs, raums);
                 Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
                 Console.WriteLine("");
 
                 lehrers.Sprechtag(@"oeffentlich\sprechtag.txt", raums, klasses, unterrichts);
 
                 Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
                 Console.WriteLine("");
 
                 var teams = new Teams();
@@ -155,7 +147,7 @@ namespace Push2Dokuwiki
                 teams.AddRange(new Teams(bildungsgangs));
 
                 // Jahrgangsspezifische Klassenteams
-                                
+
                 teams.Add(new Team("versetzung:blaue_briefe", new List<string>() { "BS", "HBG", "HBT", "HBW", "FS" }, new List<int>() { 1 }, unterrichts, lehrers));
                 teams.Add(new Team("abitur:start", new List<string>() { "GG", "GT", "GW" }, new List<int>() { 3 }, unterrichts, lehrers));
                 teams.Add(new Team("termine:fhr:start", new List<string>() { "BS", "HBG", "HBT", "HBW", "FS", "FM" }, new List<int>() { 2 }, unterrichts, lehrers));
@@ -170,45 +162,33 @@ namespace Push2Dokuwiki
                 teams.Add(new Team("Fachschaft Wirtschaftslehre", "Fachschaft Wirtschaftslehre", "Vorsitz", ":fachschaften:wirtschaftslehre_in_nicht_kaufm_klassen", unterrichts.Fachschaften(lehrers, new List<string>() { "WL", "WBL" }), anrechnungs));
                 teams.Add(new Team("Fachschaft Sport", "Fachschaft Sport", "Vorsitz", ":fachschaften:sport", unterrichts.Fachschaften(lehrers, new List<string>() { "SP", "SP G1", "SP G2" }), anrechnungs));
                 teams.Add(new Team("Fachschaft Biologie", "Fachschaft Biologie", "Vorsitz", ":fachschaften:biologie", unterrichts.Fachschaften(lehrers, new List<string>() { "BI", "Bi", "Bi FU", "Bi1", "Bi G1", "Bi G2", "BI G1", "BI L1" }), anrechnungs));
-                
+
 
 
                 teams.Add(new Team("Kollegium", "Kollegium", "Schulleiter", ":Kollegium", lehrers, anrechnungs));
                 teams.Add(new Team("Bildungsgangleitungen", "Bildungsgangleitungen", "", "Bildungsgangleitung", anrechnungs.LuL(lehrers, "Bildungsgangleitung"), anrechnungs));
                 teams.Add(new Team("Erweiterte Schulleitung", "Erweiterte Schulleitung", "", ":geschaeftsverteilungsplan:erweiterte_schulleitung", anrechnungs.LuL(lehrers, "Erweiterte Schulleitung"), anrechnungs));
                 teams.Add(new Team("Lehrerinnen", "Lehrerinnen", "Ansprechpartnerin für Gleichstellung", ":lehrerinnen", lehrers.Lehrerinnen(), anrechnungs));
-                
+
                 teams.Add(new Team("Verbindungslehrkräfte", "SV", "", ":verbindungslehrkraefte", anrechnungs.LuL(lehrers, "Verbindungslehrkräfte"), anrechnungs));
                 teams.Add(new Team("Referendare", "Referendare", "", ":referendar_innen", lehrers.Referendare(), anrechnungs));
                 teams.Add(new Team("Klassenleitungen", "Klassenleitungen", "", ":geschaeftsverteilungsplan:klassenleitungen", klasses.GetKlassenleitungen(lehrers), anrechnungs));
-                
+
                 teams.GruppenUndMitgliederToCsv(@"gruppen.csv");
 
                 Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
                 Console.WriteLine("");
 
                 //teams.DateiPraktiumErzeugen("Praktikum.txt");               
 
                 Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
                 Console.WriteLine("");
 
-                var abwesenheiten = new Abwesenheiten("AbsencePerStudent", 7);
-                var schuelerMitAbwesenheiten = schuelers.VorgängeMaßnahmenUndFehlzeitenSeitLetzterAbwesenheit(abwesenheiten, klasses, feriens);
-
-                schuelerMitAbwesenheiten.SchulpflichtüberwachungCsvTxt(
-                    "schulpflichtueberwachung.txt",
-                    "schulpflichtueberwachung.csv",
-                    10, // Schonfrist: Soviele Tage hat die Klassenleitung Zeit offene St. zu bearbeiten, bevor eine Warnung ausgelöst wird.
-                    20, // Nach so vielen unent. Stunden ohne Maßnahme wird eine Warnung ausgelöst.
-                    30, // Nach so vielen Tagen verjähren unentschuldigte Fehlstunden für Unbescholtene.
-                    90, // Nach so vielen Tagen verjähren unentschuldigte Fehlstunden für SuS mit Maßnahme
-                    klasses, 
-                    kalenderwoche);
-
+                
                 Console.WriteLine("");
-                Console.WriteLine("=============================================================================================================");
+                Console.WriteLine("=".PadRight(Console.WindowWidth, '='));
                 Console.WriteLine("");
 
 
@@ -223,7 +203,7 @@ namespace Push2Dokuwiki
                     hzJz
                     );
 
-                
+
                 Console.ReadKey();
             }
             catch (Exception ex)

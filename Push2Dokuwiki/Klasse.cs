@@ -14,5 +14,7 @@ namespace Push2Dokuwiki
         public string Stufe { get; internal set; }
         public string Schule { get; private set; }
         public Abwesenheiten Abwesenheiten { get; internal set; }
+        public int RaumId { get; internal set; }
+        public string Raum { get; internal set; }
     }
 }

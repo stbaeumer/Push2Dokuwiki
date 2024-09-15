@@ -19,13 +19,13 @@ namespace Push2Dokuwiki
         {
         }
 
-        public Unterrichts(string kriterium, int sovieleTageDarfDieDateiMaxAltSein)
+        public Unterrichts(string kriterium)
         {
             string datei = "";
 
             try
             {
-                datei = Global.CheckFile(kriterium, sovieleTageDarfDieDateiMaxAltSein);
+                datei = Global.CheckFile(kriterium);
 
                 if (datei != null)
                 {

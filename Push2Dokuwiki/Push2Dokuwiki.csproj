@@ -64,6 +64,8 @@
     <Compile Include="Gruppe.cs" />
     <Compile Include="Gruppen.cs" />
     <Compile Include="Interruption.cs" />
+    <Compile Include="Kalender.cs" />
+    <Compile Include="Kalenders.cs" />
     <Compile Include="Klasse.cs" />
     <Compile Include="Klasses.cs" />
     <Compile Include="Kurswahl.cs" />

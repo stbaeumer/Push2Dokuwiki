@@ -418,7 +418,7 @@ namespace Push2Dokuwiki
         }
         internal string GetWikiLink(string v, int stunden)
         {
-            return "[[antraege_formulare:" + v + "?@Schüler*in@=" + Vorname + "_" + Nachname + "&@Klasse@=" + Klasse.NameUntis + "&@... unentschuldigte Fehlstunden:@=" + stunden + "]]";
+            return "\\ [[antraege_formulare:" + v + "?@Schüler*in@=" + Vorname + "_" + Nachname + "&@Klasse@=" + Klasse.NameUntis + "&@... unentschuldigte Fehlstunden:@=" + stunden + "]]";
         }
     }
 }

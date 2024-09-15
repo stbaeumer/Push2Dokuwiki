@@ -16,12 +16,6 @@ namespace Push2Dokuwiki
         {
             var sj = Global.AktSj[0] + Global.AktSj[1];
 
-            if (DateTime.Now < new DateTime(2024, 08, 1)) 
-            {
-                sj = "20242025";
-            }
-
-
             using (SqlConnection odbcConnection = new SqlConnection(Global.ConnectionStringUntis))
             {
                 Beschreibungs beschreibungs = new Beschreibungs();
@@ -134,11 +128,10 @@ ORDER BY CountValue.TEACHER_ID;
 
                         anrechnung.Lehrer = (from l in lehrers where l.IdUntis == sqlDataReader.GetInt32(0) select l).FirstOrDefault();
 
-                        //if (anrechnung.Grund==200)
-                        //{
-                        //    anrechnung.Lehrer.AusgeschütteteAltersermäßigung = anrechnung.Wert;
-                        //}
-                        //anrechnung.Lehrer.CheckAltersermäßigung();
+                        if (anrechnung.Lehrer.Kürzel == "BM")
+                        {
+                            string a = "";
+                        }
                         
                         
                         // Die Beschr muss auf eine Wiki-Seite matchen. Beschr entspricht einem Thema oder einem Gremium
@@ -180,6 +173,10 @@ ORDER BY CountValue.TEACHER_ID;
                             {
                                 if (anrechnung.Lehrer != null)
                                 {
+                                    if (anrechnung.Lehrer.Kürzel=="BM")
+                                    {
+                                        string aa = "";
+                                    }
                                     if (anrechnung.Lehrer.Kürzel != null && anrechnung.Lehrer.Kürzel != "")
                                     {
                                         this.Add(anrechnung);

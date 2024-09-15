@@ -6,12 +6,12 @@ namespace Push2Dokuwiki
 {
     public class Gruppen : List<Gruppe>
     {
-        public Gruppen(string kriterium, int sovieleTageDarfDieDateiMaxAltSein)
+        public Gruppen(string kriterium)
         {
             string datei = "";
             try
             {
-                datei = Global.CheckFile(kriterium, sovieleTageDarfDieDateiMaxAltSein);
+                datei = Global.CheckFile(kriterium);
 
                 if (datei != null)
                 {
