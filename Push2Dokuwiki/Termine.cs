@@ -17,7 +17,7 @@ namespace Push2Dokuwiki
         }
 
         public Termine(string datei, string nachrichtEnthält)
-        {            
+        {
             int zeile = 1;
             var termine = new Termine();
 
@@ -25,7 +25,7 @@ namespace Push2Dokuwiki
             {
                 if (datei == null) { return; }
 
-                using (var reader = new StreamReader(datei, true))
+                using (var reader = new StreamReader(datei, Encoding.Default))
                 {
                     var kopfzeile = reader.ReadLine();
 
@@ -228,10 +228,9 @@ namespace Push2Dokuwiki
                         this.Add(termin);
                     }
                 }
-
-                Console.WriteLine(Environment.NewLine);
-                Console.WriteLine("Es werden nur Termine exportiert, die im Nachrichtentext den Ausdruck: *"+ nachrichtEnthält + "* enthalten.");
-                Global.WriteLine("Termine ........." + datei.Substring((datei.LastIndexOf("\\")) + 1), this.Count);
+                                
+                Console.WriteLine(" Es werden nur Termine exportiert, die im Nachrichtentext den Ausdruck: *"+ nachrichtEnthält + "* enthalten.");
+                Global.WriteLine("  Termine ......... " + datei.Substring((datei.LastIndexOf("\\")) + 1), this.Count);
             }
             catch (Exception ex)
             {

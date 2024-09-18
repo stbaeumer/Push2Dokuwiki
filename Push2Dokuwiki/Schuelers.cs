@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 namespace Push2Dokuwiki
 {
     public class Schuelers : List<Schueler>
-    {   
+    {
         public Schuelers()
         {
         }
@@ -343,7 +343,7 @@ ORDER BY ausgetreten DESC, klasse, schueler.name_1, schueler.name_2", connection
                         schueler.Id = theRow["AtlantisSchuelerId"] == null ? -99 : Convert.ToInt32(theRow["AtlantisSchuelerId"]);
                         schueler.Nachname = theRow["Nachname"] == null ? "" : theRow["Nachname"].ToString();
                         schueler.Vorname = theRow["Vorname"] == null ? "" : theRow["Vorname"].ToString();
-                        schueler.Jahrgang = theRow["AktJahrgang"] == null ? "" : theRow["AktJahrgang"].ToString();                        
+                        schueler.Jahrgang = theRow["AktJahrgang"] == null ? "" : theRow["AktJahrgang"].ToString();
                         schueler.Ort = theRow["Ort"] == null ? "" : theRow["Ort"].ToString();
                         schueler.Klasse = theRow["Klasse"] == null ? new Klasse() : (from k in klasses where k.NameUntis == theRow["Klasse"].ToString() select k).FirstOrDefault();
                         schueler.Wahlklausur12_1 = theRow["Wahlklausur12_1"] == null ? "" : theRow["Wahlklausur12_1"].ToString();
@@ -491,7 +491,7 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
         }
 
         internal void SchulpflichtüberwachungTxt(
-            string tempdateiTxt,
+            string datei,
             int schonfrist,
             int warnungAbAnzahl,
             int verjährungUnbescholtene,
@@ -499,40 +499,33 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
             Klasses klasses,
             int kalenderwoche)
         {
-            var dateiTxt = Global.Dateipfad + tempdateiTxt;
-            int lastSlashIndex = tempdateiTxt.LastIndexOf('\\');
-            string resultTxt = (lastSlashIndex != -1) ? tempdateiTxt.Substring(lastSlashIndex + 1) : tempdateiTxt;
+            File.WriteAllText(Global.TempPfad + datei, "====== Schulpflichtüberwachung ======" + Environment.NewLine, Encoding.UTF8);
+
             var zeilen = new List<string>();
-            tempdateiTxt = System.IO.Path.GetTempPath() + resultTxt;
-            
-            File.WriteAllText(tempdateiTxt, "====== Schulpflichtüberwachung ======" + Environment.NewLine, Encoding.UTF8);
             zeilen.Add(Environment.NewLine);
-            
-            zeilen.Add(@"Hallo Klassenleitung," + Environment.NewLine);
-            zeilen.Add(@"" + Environment.NewLine);
-            zeilen.Add(@"Du wurdest von Teams hierher verlinkt, weil bei der automatisierten, wöchentlichen Durchsicht der Fehlzeiten eine mögliche Schulpflichtverletzung in Deiner Klasse aufgepoppt ist." + Environment.NewLine);
-            zeilen.Add(@"" + Environment.NewLine);
-            zeilen.Add(@"Die Tabelle unten ist als Service gemeint, mit dem Ziel " + Environment.NewLine);
-            
-            zeilen.Add(@"  * mögliche Fälle mit der exakten Anzahl unentschuldigter Fehlstunden anzuzeigen, ohne [[:Webuntis:start|Webuntis]] auswerten zu müssen," + Environment.NewLine);
-            
-            zeilen.Add(@"  * [[:Schulsozialarbeit]] einzubinden," + Environment.NewLine);
-            zeilen.Add(@"  * Reaktionszeiten zu verkürzen, indem Maßnahmen mit einem Klick ausgelöst werden können." + Environment.NewLine);
-            
-            zeilen.Add(@"" + Environment.NewLine);
-            zeilen.Add(@"" + Environment.NewLine);
-            zeilen.Add(@"" + Environment.NewLine);
-            zeilen.Add(@"Rückmeldungen oder Fragen helfen uns die Automatik zu verbessern. Also gerne melden!" + Environment.NewLine);
-            zeilen.Add(@"" + Environment.NewLine);
-            zeilen.Add(@"Vielen Dank,\\ [[chat>Stefan.Baeumer|Stefan Bäumer]]" + Environment.NewLine);
 
+            zeilen.Add(@"**Hallo Klassenleitung,**" + Environment.NewLine);
             zeilen.Add(@"" + Environment.NewLine);
-            zeilen.Add(@"===== Tabelle Schulpflichtüberwachung KW " + kalenderwoche +"=====" + Environment.NewLine);
+            zeilen.Add(@"Du wurdest von Teams hierher verlinkt, weil bei der automatisierten, wöchentlichen Durchsicht der Fehlzeiten eine mögliche Schulpflichtverletzung in Deiner Klasse aufgepoppt ist. Können wir Dir Arbeit abnehmen?" + Environment.NewLine);
             zeilen.Add(@"" + Environment.NewLine);
-
+            zeilen.Add(@"**Fragen & Antworten**" + Environment.NewLine);
+            zeilen.Add(@"" + Environment.NewLine);
+            zeilen.Add(@"  * :?: Was ist das Ziel dieser Seite? :!: Kritische Fälle erkennen, Reaktionszeiten verkürzen, Klassenleitungen Arbeit abnehmen, SuS signalisieren, dass wir hinschauen." + Environment.NewLine);
+            
+            zeilen.Add(@"  * :?: Wie oft soll ich mahnen? :!: Nach der Mahnung folgt i.d.R. die Teilkonferenz oder das Bußgeldverfahren. Wenn die letzte Mahnung sehr lange her ist, kommt eine weitere Mahnung in Betracht. " + Environment.NewLine);
+            
+            zeilen.Add(@"  * :?: Was, wenn die Zahlen nicht stimmen? :!: Dann gerne melden bei [[chat>stefan.baeumer|Stefan Bäumer]]." + Environment.NewLine);
+            
+            zeilen.Add(@"  * :?: Muss ich eine irgendwem eine Rückmeldung zu den Fällen in meiner Klasse geben? :!: Nein. Eine Rückmeldung ist nicht notwendig. Wer Fragen hat, kann sich natürlich immer melden: [[chat>stefan.baeumer|Stefan Bäumer]]." + Environment.NewLine);
+            zeilen.Add(@"" + Environment.NewLine);
+            zeilen.Add(@"" + Environment.NewLine);
+            zeilen.Add(@"" + Environment.NewLine);            
+            zeilen.Add(@"" + Environment.NewLine);
+            zeilen.Add(@"===== Tabelle Schulpflichtüberwachung KW " + kalenderwoche + "=====" + Environment.NewLine);
+            zeilen.Add(@"" + Environment.NewLine);
 
             zeilen.Add("<searchtable>" + Environment.NewLine);
-            zeilen.Add("^  Klasse  ^  Klassenleitung  ^  Name  ^  Alter am 1.Schultag im SJ " + Global.AktSj[0] + "/" + Global.AktSj[1] + "  ^  bisherige Maßnahmen  ^  Aussage  ^  mögliche Maßnahmen  ^  Teilkonferenz" + Environment.NewLine);
+            zeilen.Add("^  Klasse  ^  Klassenleitung  ^  Name  ^  Alter am 1.Schultag im SJ " + Global.AktSj[0] + "/" + Global.AktSj[1] + "  ^  bisherige Maßnahmen  ^  Aussage  ^Womit können wir Arbeit abnehmen?  ^" + Environment.NewLine);
 
             string teamsChatLink = "chats>sina.milewski@berufskolleg-borken.de,stefan.gantefort@berufskolleg-borken.de,ursula.moritz@berufskolleg-borken.de,";
             var mailliste = "mailto:sina.milewski@berufskolleg-borken.de;stefan.gantefort@berufskolleg-borken.de;ursula.moritz@berufskolleg-borken.de;";
@@ -547,11 +540,11 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
                     {
                         var name = schueler.Vorname.Substring(0, 2) + "." + schueler.Nachname.Substring(0, 2);
 
-                            // Geburtsdatum der Person
-                            DateTime geburtsdatum = schueler.Gebdat;
+                        // Geburtsdatum der Person
+                        DateTime geburtsdatum = schueler.Gebdat;
 
                         // Datum, an dem das Alter berechnet werden soll
-                        DateTime ersterSchultag = new DateTime(Convert.ToInt32(Global.AktSj[0]), 8, 1); 
+                        DateTime ersterSchultag = new DateTime(Convert.ToInt32(Global.AktSj[0]), 8, 1);
 
                         // Berechnung des Alters
                         int alter = ersterSchultag.Year - geburtsdatum.Year;
@@ -574,7 +567,7 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
                          *            6 Stunden            5 Stunden               4 Stunden
                          *            
                          *                      |<----------------------------------------------------->|
-                         *                            Verjährung oder Zeitseit Maßnahme 6 Tage 
+                         *                            Verjährung oder Zeit seit Maßnahme 6 Tage 
                          *            
                          *                                               |<---------------------------->|
                          *                                                     Schonfrist für KL
@@ -630,16 +623,17 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
                                               where a.Datum.Date > schueler.JüngsteMaßnahmeInDiesemSj.Datum             // zählen alle n.e. Fehlzeiten seit Maßnahme  
                                               where a.Datum.Date > new DateTime(Convert.ToInt32(Global.AktSj[0]), 8, 1)
                                               select a.Fehlstunden).Sum();
-                        
+
                         var aussage = "";
                         var mahnung = "";
                         var mahnungWikiLink = "";
                         var attestpflicht = "";
                         var attestpflichtWikiLink = "";
                         var teilkonferenz = "";
+                        var bußgeldverfahren = "";
 
                         // Wenn es noch keine Maßnahme in diesem SJ gab ...
-                        if ((from m in schueler.Maßnahmen where m.Datum > new DateTime(Convert.ToInt32(Global.AktSj[0]),8,1) select m).Count() == 0)
+                        if ((from m in schueler.Maßnahmen where m.Datum > new DateTime(Convert.ToInt32(Global.AktSj[0]), 8, 1) select m).Count() == 0)
                         {
                             // ... und wenn es eine F2 gibt ...
                             if (schueler.F2 > 0)
@@ -648,7 +642,7 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
                                 {
                                     // ... dann werden F2 und F3 angemahnt.
 
-                                    aussage += "Bisher keine Maßnahme in diesem SJ trotz " + schueler.F2plusF3 + " unent. Fehlst. in den letzten " + verjährungUnbescholtene + " Tagen.";
+                                    aussage += schueler.F2plusF3 + " unent. Fehlst. in den letzten " + verjährungUnbescholtene + " Tagen. ";
                                     mahnung = schueler.GetUrl("Mahnungen");
                                     mahnungWikiLink = schueler.GetWikiLink("Mahnung", schueler.F2plusF3);
                                     attestpflicht = schueler.GetUrl("Attestpflicht");
@@ -665,17 +659,24 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
                             {
                                 // ... dann werden F2M und F3 angemahnt.
 
-                                aussage += "Trotz " + schueler.JüngsteMaßnahmeInDiesemSj.Bezeichnung + " entstehen aktuell unent. Fehlstd. (" + schueler.F2MplusF3M + ") seit der Maßnahme.";
+                                aussage += schueler.F2MplusF3 + " unent. Fehlstd. seit " + schueler.JüngsteMaßnahmeInDiesemSj.Bezeichnung + "(" + schueler.JüngsteMaßnahmeInDiesemSj.Datum.ToShortDateString() + ").";
 
                                 if (schueler.JüngsteMaßnahmeInDiesemSj.Bezeichnung == "Mahnung")
                                 {
-                                    teilkonferenz = "Teilkonferenz am besten ...";
+                                    if (alter < 18)
+                                    {
+                                        bußgeldverfahren = @"\\ [[eskalationsstufen_erzieherische_einwirkung_ordnungsmassnahmen:bussgeldverfahren:start|Bußgeldverfahren]]";
+                                    }
+                                    else
+                                    {
+                                        teilkonferenz = @"\\ Teilkonferenz am besten ...";
+                                    }
                                 }
                             }
                         }
 
                         schueler.MaßnahmenAlsWikiLinkAufzählung = schueler.GetMaßnahmenAlsWikiLinkAufzählung();
-                        
+
                         //schueler.MaßnahmenAlsWikiLinkAufzählungDatum = schueler.GetMaßnahmenAlsWikiLinkAufzählungDatum();
 
                         if (aussage.Length > 0)
@@ -684,7 +685,7 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
 
                             foreach (var k in klassenleitungen)
                             {
-                                if (!klassenleitungenString.Contains(k+","))
+                                if (!klassenleitungenString.Contains(k + ","))
                                 {
                                     klassenleitungenString += k.Kürzel + ",";
                                 }
@@ -699,7 +700,7 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
                                 }
                             }
 
-                            zeilen.Add("|" + schueler.Klasse.NameUntis.PadRight(10) + "|" + klassenleitungenString.TrimEnd(',').PadRight(16) + "  |" + name.PadRight(8) + "|" + alter + "|" + schueler.MaßnahmenAlsWikiLinkAufzählung + "  |" + aussage + "  |[[:eskalationsstufen_erzieherische_einwirkung_ordnungsmassnahmen|Erz.Einwirkung]] " + attestpflichtWikiLink + " " + mahnungWikiLink + " " + teilkonferenz + "|" + Environment.NewLine);
+                            zeilen.Add("|" + schueler.Klasse.NameUntis.PadRight(10) + "|" + klassenleitungenString.TrimEnd(',').PadRight(16) + "  |" + name.PadRight(8) + "|" + alter + "|" + schueler.MaßnahmenAlsWikiLinkAufzählung + "  |" + aussage + "  |[[:eskalationsstufen_erzieherische_einwirkung_ordnungsmassnahmen|Erz.Einwirkung]] " + attestpflichtWikiLink + " " + mahnungWikiLink + " " + bußgeldverfahren + " " + teilkonferenz + "|" + Environment.NewLine);
                         }
                     }
                 }
@@ -708,16 +709,16 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
             zeilen.Add("</searchtable>" + Environment.NewLine);
 
             teamsChatLink = teamsChatLink.TrimEnd(',') + "&topicName=Schulpflichtüberwachung KW " + kalenderwoche + "&message=Bitte beachten: https://bkb.wiki/schulpflichtueberwachung";
-            
+
             foreach (var zeile in zeilen)
             {
                 var z = zeile.Replace("Teams", @"[[" + teamsChatLink + @"|Teams]]");
-                File.AppendAllText(tempdateiTxt, z, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + datei, z, Encoding.UTF8);
             }
 
-            Global.Dateischreiben(resultTxt, dateiTxt, tempdateiTxt);
+            Global.Dateischreiben(datei);
         }
-        
+
 
         internal void GetWebuntisUnterrichte(Unterrichts alleUnterrichte, Gruppen alleGruppen, string interessierendeKlasse, string hzJz)
         {
@@ -761,15 +762,17 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
 
         internal Schuelers GetMaßnahmenUndFehlzeiten(Abwesenheiten abwesenheiten, Klasses klasses, Feriens feriens)
         {
+            Console.WriteLine("Schulpflichtüberwachung");
+
             var maßnahmen = new Maßnahmen(abwesenheiten);
             var vorgänge = new Vorgänge(abwesenheiten);
 
             Schuelers sMitAbwesenheiten = new Schuelers();
-            
+
             foreach (var schueler in this)
             {
                 if ((from a in abwesenheiten where a.StudentId == schueler.Id select a).Any())
-                {                    
+                {
                     schueler.Abwesenheiten.AddRange((from a in abwesenheiten where a.StudentId == schueler.Id select a).ToList());
 
                     foreach (var m in maßnahmen.OrderBy(k => k.Datum))
@@ -777,7 +780,7 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
                         if (m.SchuelerId == schueler.Id)
                         {
                             schueler.Maßnahmen.Add(m);
-                            schueler.AlleMaßnahmenUndVorgänge += m.Datum.ToShortDateString()+":" + m.Kürzel + ", ";
+                            schueler.AlleMaßnahmenUndVorgänge += m.Datum.ToShortDateString() + ":" + m.Kürzel + ", ";
                         }
                     }
 
@@ -797,7 +800,7 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
                     sMitAbwesenheiten.Add(schueler);
                 }
             }
-                        
+
             Global.WriteLine(" Schüler mit Abwesenheiten", sMitAbwesenheiten.Count);
 
             return sMitAbwesenheiten;
@@ -1103,21 +1106,16 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
 
                 File.AppendAllText(lokalerPfad + klasse + ".txt", "" + Environment.NewLine, Encoding.UTF8);
 
-                Global.Dateischreiben("trhgf", sqlPfad + klasse + ".txt", lokalerPfad + klasse + ".txt");
+                Global.Dateischreiben("trhgf");
                 //break;
             }
-            Global.Dateischreiben("sdsdf",sqlPfad + "start.txt", lokalerPfad + "start.txt");
+            Global.Dateischreiben("sdsdf");
         }
 
-        internal void Reliabmelder(string tempdatei)
+        internal void Reliabmelder(string datei)
         {
             try
             {
-                var datei = Global.Dateipfad + tempdatei;
-                int lastSlashIndex = tempdatei.LastIndexOf('\\');
-                string result = (lastSlashIndex != -1) ? tempdatei.Substring(lastSlashIndex + 1) : tempdatei;
-                tempdatei = System.IO.Path.GetTempPath() + result;
-
                 var abgemeldeteSchuelers = new Schuelers();
 
                 foreach (var s in this)
@@ -1134,50 +1132,49 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                         }
                     }
                 }
-                
-                File.WriteAllText(datei, "~~NOTOC~~" + Environment.NewLine, Encoding.UTF8);
 
-                File.AppendAllText(datei, "====== Abgemeldete vom Religionsunterricht ======" + Environment.NewLine, Encoding.UTF8);
+                File.WriteAllText(Global.TempPfad + datei, "~~NOTOC~~" + Environment.NewLine, Encoding.UTF8);
 
-                File.AppendAllText(datei, "" + Environment.NewLine, Encoding.UTF8);
-                File.AppendAllText(datei, "  * [[religionslehre|Religionslehre]]" + Environment.NewLine, Encoding.UTF8);
-                File.AppendAllText(datei, "  * [[fachschaften|Fachschaft]]: [[fachschaften:religionslehre|Religion]]" + Environment.NewLine, Encoding.UTF8);
-                File.AppendAllText(datei, "" + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + datei, "====== Abgemeldete vom Religionsunterricht ======" + Environment.NewLine, Encoding.UTF8);
 
-                File.AppendAllText(datei, "  Diese Seite wird automatisch aktualisiert. Bitte nicht manuell ändern." + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + datei, "" + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + datei, "  * [[religionslehre|Religionslehre]]" + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + datei, "  * [[fachschaften|Fachschaft]]: [[fachschaften:religionslehre|Religion]]" + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + datei, "" + Environment.NewLine, Encoding.UTF8);
 
-                File.AppendAllText(datei, Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + datei, "  Diese Seite wird automatisch aktualisiert. Bitte nicht manuell ändern." + Environment.NewLine, Encoding.UTF8);
 
-                File.AppendAllText(datei, "<searchtable>" + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + datei, Environment.NewLine, Encoding.UTF8);
 
-                File.AppendAllText(datei, "^ ^Klasse^Name^Abgemeldet am^" + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + datei, "<searchtable>" + Environment.NewLine, Encoding.UTF8);
+
+                File.AppendAllText(Global.TempPfad + datei, "^ ^Klasse^Name^Abgemeldet am^" + Environment.NewLine, Encoding.UTF8);
 
                 var abgemeldeteSortiert = abgemeldeteSchuelers.OrderBy(x => x.Klasse.NameUntis).ThenBy(x => x.Nachname).ThenBy(x => x.Vorname).ToList();
 
                 for (int i = 0; i < abgemeldeteSortiert.Count; i++)
                 {
-                    File.AppendAllText(datei, "|  " + (i + 1).ToString().PadRight(3) + ".|" + abgemeldeteSortiert[i].Klasse.NameUntis.PadRight(8) + "|" + (abgemeldeteSortiert[i].Nachname + ", " + abgemeldeteSortiert[i].Vorname).PadRight(30) + "|" + abgemeldeteSortiert[i].Reliabmeldung.ToShortDateString() + "|" + Environment.NewLine, Encoding.UTF8);
+                    File.AppendAllText(Global.TempPfad + datei, "|  " + (i + 1).ToString().PadRight(3) + ".|" + abgemeldeteSortiert[i].Klasse.NameUntis.PadRight(8) + "|" + (abgemeldeteSortiert[i].Nachname + ", " + abgemeldeteSortiert[i].Vorname).PadRight(30) + "|" + abgemeldeteSortiert[i].Reliabmeldung.ToShortDateString() + "|" + Environment.NewLine, Encoding.UTF8);
                 }
 
-                File.AppendAllText(datei, "</searchtable>" + Environment.NewLine, Encoding.UTF8);
-                File.AppendAllText(datei, "" + Environment.NewLine, Encoding.UTF8);
-                File.AppendAllText(datei, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + datei, "</searchtable>" + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + datei, "" + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + datei, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine, Encoding.UTF8);
 
-                File.AppendAllText(datei, "" + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + datei, "" + Environment.NewLine, Encoding.UTF8);
 
-                Global.Dateischreiben("Reliabmelder", datei, tempdatei);
+                Global.Dateischreiben(datei);
             }
             catch (Exception ex)
             {
                 throw ex;
-            }            
+            }
         }
 
-        internal void PraktikantenToCsv(string tempdatei, List<string> interessierendeKlassenUndJg)
+        internal void PraktikantenCsv(string datei, List<string> interessierendeKlassenUndJg)
         {
             UTF8Encoding utf8NoBom = new UTF8Encoding(false);
-            var filePath = Global.Dateipfad + tempdatei;
-
+            
             var praktikanten = new List<Schueler>();
 
             foreach (var item in interessierendeKlassenUndJg)
@@ -1185,15 +1182,16 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
                 praktikanten.AddRange((from s in this where s.Klasse.NameUntis.StartsWith(item.Split(',')[0]) where s.Jahrgang == "0" + item.Split(',')[1] select s).ToList());
             }
 
-            File.WriteAllText(filePath, "\"Name\",\"Klasse\",\"Jahrgang\",\"Betrieb\",\"Betreuung\"" + Environment.NewLine, utf8NoBom);
-            
+            File.WriteAllText(Global.TempPfad + datei, "\"Name\",\"Klasse\",\"Jahrgang\",\"Betrieb\",\"Betreuung\"" + Environment.NewLine, utf8NoBom);
+
             foreach (var praktikant in praktikanten)
             {
                 if (praktikant != null)
                 {
-                    File.AppendAllText(filePath, "\"" + praktikant.Nachname+", "+praktikant.Vorname + "\",\"" + praktikant.Klasse.NameUntis + "\",\"" + praktikant.Jahrgang + "\",\"\",\"\"" + Environment.NewLine, utf8NoBom);
+                    File.AppendAllText(Global.TempPfad + datei, "\"" + praktikant.Nachname + ", " + praktikant.Vorname + "\",\"" + praktikant.Klasse.NameUntis + "\",\"" + praktikant.Jahrgang + "\",\"\",\"\"" + Environment.NewLine, utf8NoBom);
                 }
             }
+            Global.Dateischreiben(datei);
         }
     }
 }

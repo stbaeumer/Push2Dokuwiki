@@ -54,14 +54,9 @@ WHERE Subjects.Schoolyear_id = " + Global.AktSj[0] + Global.AktSj[1] + " AND Sub
             }
         }
 
-        internal void faecherCsv(string tempdatei)
+        internal void Csv(string datei)
         {
-            var datei = Global.Dateipfad + tempdatei;
-            int lastSlashIndex = tempdatei.LastIndexOf('\\');
-            string result = (lastSlashIndex != -1) ? tempdatei.Substring(lastSlashIndex + 1) : tempdatei;
-            tempdatei = System.IO.Path.GetTempPath() + result;
-
-            File.WriteAllText(tempdatei, "\"name\",\"kuerzel\"" + Environment.NewLine);
+            File.WriteAllText(Global.TempPfad + datei, "\"name\",\"kuerzel\"" + Environment.NewLine);
 
             var verschiedeneFaecher = (from t in this select t.Langname).ToList().Distinct();
 
@@ -73,16 +68,16 @@ WHERE Subjects.Schoolyear_id = " + Global.AktSj[0] + Global.AktSj[1] + " AND Sub
                     var kürzelstring = "";
                     foreach (var item in kürzel)
                     {
-                        if (item != "" && !kürzelstring.Contains(item+","))
+                        if (item != "" && !kürzelstring.Contains(item + ","))
                         {
                             kürzelstring += item + ",";
                         }
                     }
-                    File.AppendAllText(tempdatei, "\"" + langname + "\",\"" + kürzelstring.TrimEnd(',') + "\"" + Environment.NewLine);
+                    File.AppendAllText(Global.TempPfad + datei, "\"" + langname + "\",\"" + kürzelstring.TrimEnd(',') + "\"" + Environment.NewLine);
                 }
             }
 
-            Global.Dateischreiben(result, datei, tempdatei);
+            Global.Dateischreiben(datei);
         }
     }
 }

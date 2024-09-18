@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Push2Dokuwiki
 {
@@ -18,16 +19,17 @@ namespace Push2Dokuwiki
             string nurTermineMitDiesemStringInDerNachrichtWerdenAusgewertet,            
             string nameDerImportCsvDatei)
         {
+            Console.WriteLine(nameDerImportCsvDatei);
             Importdatei = Global.CheckFile(nameDerImportCsvDatei);
             Termine = new Termine(Importdatei,nurTermineMitDiesemStringInDerNachrichtWerdenAusgewertet);
-            ToCsv(kopfzeile, nameDerImportCsvDatei + ".csv");
+            Csv(kopfzeile, nameDerImportCsvDatei + ".csv");
         }
 
-        private void ToCsv(string kopfzeile, string nameDerImportCsvDatei)
+        private void Csv(string kopfzeile, string dateiCsv)
         {
-            UTF8Encoding utf8NoBom = new UTF8Encoding(false);
+            Global.OrdnerAnlegen(dateiCsv);
 
-            var filePath = Global.Dateipfad + nameDerImportCsvDatei;
+            UTF8Encoding utf8NoBom = new UTF8Encoding(false);
 
             Type type = this.Termine[0].GetType();
 
@@ -41,7 +43,7 @@ namespace Push2Dokuwiki
                 return xIndex.CompareTo(yIndex);
             });
 
-            File.WriteAllText(filePath, kopfzeile + Environment.NewLine, utf8NoBom);
+            File.WriteAllText(Global.TempPfad + dateiCsv, kopfzeile + Environment.NewLine, utf8NoBom);
 
             foreach (var t in Termine.OrderBy(x => x.Datum))
             {
@@ -110,11 +112,12 @@ namespace Push2Dokuwiki
                                 }
                             }
                         }
-                        File.AppendAllText(filePath, zeile.TrimEnd(',') + Environment.NewLine, utf8NoBom);
+                        File.AppendAllText(Global.TempPfad + dateiCsv, zeile.TrimEnd(',') + Environment.NewLine, utf8NoBom);
                     }
                 }
             }
-            Global.WriteLine("                        " + filePath, "erstellt");
+            Global.Dateischreiben(dateiCsv);
+            Global.WriteLine("     " + Global.Dateipfad + dateiCsv, "erstellt");
         }
     }
 }

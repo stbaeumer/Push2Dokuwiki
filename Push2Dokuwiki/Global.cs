@@ -14,7 +14,7 @@ namespace Push2Dokuwiki
         public static string User = System.Security.Principal.WindowsIdentity.GetCurrent().Name.ToUpper().Split('\\')[1];
 
         public static string Dateipfad = @"\\fs01\Wiki\push2dokuwiki-seiten\";
-        
+        public static string TempPfad = System.IO.Path.GetTempPath();
 
         public const string ConnectionStringUntis = @"Data Source=SQL01\UNTIS;Initial Catalog=master;Integrated Security=True";
         public const string ConnectionStringAtlantis = @"Dsn=Atlantis17u;uid=DBA";
@@ -26,6 +26,7 @@ namespace Push2Dokuwiki
 
         public static string ImportPfad { get; internal set; }
         public static int SoAltDürfenImportDateienHöchstesSein { get; internal set; }
+        
 
         internal static string Anrechnungen()
         {
@@ -170,37 +171,37 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
 
         internal static void WriteLine(string v, string go)
         {
-            Console.WriteLine(((v + " " + ".").PadRight(111, '.')).Substring(0, 111 - go.Length - 3) + "   " + go);
+            Console.WriteLine(((v + " " + ".").PadRight(130, '.')).Substring(0, 130 - Math.Min(105,go.Length) - 3) + "   " + go);
         }
 
-        internal static void Dateischreiben(string name, string datei, string dateiTemp)
+        internal static void Dateischreiben(string name)
         {
             UTF8Encoding utf8NoBom = new UTF8Encoding(false);
 
-            if (File.Exists(datei) && File.Exists(dateiTemp))
+            if (File.Exists(Global.Dateipfad + name) && File.Exists(Global.TempPfad + name))
             {
-                string contentNeu = File.ReadAllText(dateiTemp, utf8NoBom);
+                string contentNeu = File.ReadAllText(Global.TempPfad + name, utf8NoBom);
 
                 // Lese den Inhalt der Dateien
-                string contentAlt = File.ReadAllText(datei, utf8NoBom);
+                string contentAlt = File.ReadAllText(Global.Dateipfad + name, utf8NoBom);
 
                 // Vergleiche die Inhalte der Dateien
                 if (contentAlt != contentNeu)
                 {
                     // Überschreibe alt mit dem Inhalt von neu
-                    File.WriteAllText(datei, contentNeu, utf8NoBom);
-                    Console.WriteLine(" " + datei.Substring((datei.LastIndexOf("\\")) + 1) + ": " + datei + " überschrieben.");
+                    File.WriteAllText(Global.Dateipfad + name, contentNeu, utf8NoBom);
+                    Console.WriteLine("     " + name + ": überschrieben.");
                 }
                 else
                 {
-                    Global.WriteLine(" " + name, datei.Substring((datei.LastIndexOf("\\")) + 1) + ": Alte und neue Datei sind identisch. Keine Änderungen vorgenommen.");
+                    Console.WriteLine("     " + name + ": Alte und neue Datei sind identisch. Keine Änderungen vorgenommen.");
                 }
             }
-            if (!File.Exists(datei))
+            if (!File.Exists(Global.Dateipfad + name))
             {
-                string contentNeu = File.ReadAllText(dateiTemp, utf8NoBom);
-                File.WriteAllText(datei, contentNeu, utf8NoBom);
-                Global.WriteLine(" " + name, datei.Substring((datei.LastIndexOf("\\")) + 1) + ": Datei neu erstellt.");
+                string contentNeu = File.ReadAllText(Global.TempPfad + name, utf8NoBom);
+                File.WriteAllText(Global.Dateipfad + name, contentNeu, utf8NoBom);
+                Global.WriteLine(" " + name, (Global.Dateipfad + name).Substring(((Global.Dateipfad + name).LastIndexOf("\\")) + 1) + ": Datei neu erstellt.");
             }
         }
 
@@ -219,7 +220,7 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
                 int nextSegmentLength = Math.Min(maxLineLength, length - currentIndex);
                 // Append the segment and a line break
                 result.Append(text.Substring(currentIndex, nextSegmentLength));
-                result.Append(Environment.NewLine);
+                result.Append(Environment.NewLine + "   ");                
                 // Move to the next segment
                 currentIndex += nextSegmentLength;
             }
@@ -229,7 +230,7 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
 
         public static string CheckFile(string kriterium)
         {
-            var sourceFile = (from f in Directory.GetFiles(Global.ImportPfad, "*.csv", SearchOption.AllDirectories) where f.Contains(kriterium) orderby File.GetLastWriteTime(f) select f).LastOrDefault();
+            var sourceFile = (from f in Directory.GetFiles(Global.ImportPfad, "*.csv", SearchOption.AllDirectories) where f.Contains(Path.GetFileName(kriterium)) orderby File.GetLastWriteTime(f) select f).LastOrDefault();
 
             if (sourceFile == null)
             {
@@ -305,11 +306,19 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
 
             if (sourceFile.Contains("StudentgroupStudents"))
             {
+                Console.WriteLine("  Exportieren Sie die Datei frisch aus Webuntis, indem Sie als Administrator:");
+                Console.WriteLine("   1. Administration > Export klicken");
+                Console.WriteLine("   2. Zeitraum begrenzen, also die Woche der Zeugniskonferenz und vergange Abschnitte herauslassen");
+                Console.WriteLine("   3. Das CSV-Icon hinter Schülergruppen klicken");
                 Console.WriteLine("   4. Die Schülergruppen  (\"StudentgroupStudents<...>.CSV\") im Download-Ordner zu speichern");
             }
 
             if (sourceFile.Contains("ExportLessons"))
-            {                
+            {
+                Console.WriteLine("  Exportieren Sie die Datei frisch aus Webuntis, indem Sie als Administrator:");
+                Console.WriteLine("   1. Administration > Export klicken");
+                Console.WriteLine("   2. Zeitraum begrenzen, also die Woche der Zeugniskonferenz und vergange Abschnitte herauslassen");
+                Console.WriteLine("   3. Das CSV-Icon hinter Unterricht klicken");
                 Console.WriteLine("   4. Die Unterrichte (\"ExportLessons<...>.CSV\") im Download-Ordner zu speichern");
             }
             Console.ReadKey();
@@ -325,6 +334,30 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
                 x += item.Trim() + delimiter;
             }
             return x.TrimEnd(delimiter);
+        }
+
+        internal static void OrdnerAnlegen(string datei)
+        {
+            string temp = Path.GetDirectoryName(Global.TempPfad + datei);
+            
+            if (!Directory.Exists(temp))
+            {
+                Directory.CreateDirectory(temp);
+                Console.WriteLine($"Verzeichnis erstellt: {temp}");
+            }
+
+            string verzeichnis = Path.GetDirectoryName(Global.Dateipfad + datei);
+
+            if (!Directory.Exists(verzeichnis))
+            {
+                Directory.CreateDirectory(verzeichnis);
+                Console.WriteLine($"Verzeichnis erstellt: {verzeichnis}");
+            }
+        }
+
+        internal static void OrdnerAnlegen(object name)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -55,7 +55,10 @@ namespace Push2Dokuwiki
                                     abwesenheit.Status == "offen" ||
                                     abwesenheit.Status == "nicht entsch.")
                             {
-                                this.Add(abwesenheit);
+                                if (abwesenheit.Fehlstunden <= 9) // maximal 9 Fehlstunden am Tag werden gezählt. Klassenfahrten würden sonst 24 Stunden zählen.
+                                {
+                                    this.Add(abwesenheit);
+                                }
                             }
                             zeile++;
                         }
@@ -73,9 +76,9 @@ namespace Push2Dokuwiki
             }
             finally 
             {   
-                Global.WriteLine("Abwesenheiten ........." + datei.Substring((datei.LastIndexOf("\\")) + 1), this.Count);
+                Global.WriteLine("Abwesenheiten ......... " + datei.Substring((datei.LastIndexOf("\\")) + 1), this.Count);
                 ÄltesteAbwesenheit = (from a in this.OrderBy(x => x.Datum) select a.Datum).FirstOrDefault();
-                Global.WriteLine("Abwesenheiten werden berücksichtigt ab:", ÄltesteAbwesenheit.ToShortDateString());
+                Global.WriteLine(" Abwesenheiten werden berücksichtigt ab:", ÄltesteAbwesenheit.ToShortDateString());
             }
         }
 

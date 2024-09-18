@@ -146,16 +146,48 @@ teamSoll.Langname.StartsWith("HB")))
             }
         }
 
-        public Teams()
+        public Teams(Klasses klasses, Unterrichts unterrichts, Anrechnungs anrechnungs, Lehrers lehrers)
         {
+            // Die Bildungsgaenge werden aus den Anrechnungen ermittelt. Bildungsgang ist, was das Wort "Bildungsgangleitung" im Text in Untis enthält und einen Link 'bildungsgaenge: ...' in der Beschr.   
+
+            var bildungsgangs = new Bildungsgangs(unterrichts, anrechnungs, lehrers);
+
+            this.AddRange(new Teams(bildungsgangs));
+
+            // Jahrgangsspezifische Klassenteams
+
+            this.Add(new Team("versetzung:blaue_briefe", new List<string>() { "BS", "HBG", "HBT", "HBW", "FS" }, new List<int>() { 1 }, unterrichts, lehrers));
+            this.Add(new Team("abitur:start", new List<string>() { "GG", "GT", "GW" }, new List<int>() { 3 }, unterrichts, lehrers));
+            this.Add(new Team("termine:fhr:start", new List<string>() { "BS", "HBG", "HBT", "HBW", "FS", "FM" }, new List<int>() { 2 }, unterrichts, lehrers));
+
+            // Fachschaften
+
+            this.Add(new Team("Fachschaft Deutsch", "Fachschaft Deutsch", "Vorsitz", ":fachschaften:deutsch_kommunikation", unterrichts.Fachschaften(lehrers, new List<string>() { "E", "E FU", "E1", "E2", "E G1", "E G2", "E L1", "E L2", "E L", "EL", "EL1", "EL2" }), anrechnungs));
+            this.Add(new Team("Fachschaft Englisch", "Fachschaft Englisch", "Vorsitz", ":fachschaften:englisch", unterrichts.Fachschaften(lehrers, new List<string>() { "E", "E FU", "E1", "E2", "E G1", "E G2", "E L1", "E L2", "E L", "EL", "EL1", "EL2" }), anrechnungs));
+            this.Add(new Team("Fachschaft Religion", "Fachschaft Religion", "Vorsitz", ":fachschaften:religionslehre", unterrichts.Fachschaften(lehrers, new List<string>() { "KR", "KR FU", "KR1", "KR2", "KR G1", "KR G2", "ER", "ER G1" }), anrechnungs));
+            this.Add(new Team("Fachschaft Mathematik", "Fachschaft Mathematik", "Vorsitz", ":fachschaften:mathematik_physik", unterrichts.Fachschaften(lehrers, new List<string>() { "M", "M FU", "M1", "M2", "M G1", "M G2", "M L1", "M L2", "M L", "ML", "ML1", "ML2" }), anrechnungs));
+            this.Add(new Team("Fachschaft Politik", "Fachschaft Politik", "Vorsitz", ":fachschaften:politik_gesellschaftslehre", unterrichts.Fachschaften(lehrers, new List<string>() { "PK", "PK FU", "PK1", "PK2", "GG G1", "GG G2" }), anrechnungs));
+            this.Add(new Team("Fachschaft Wirtschaftslehre", "Fachschaft Wirtschaftslehre", "Vorsitz", ":fachschaften:wirtschaftslehre_in_nicht_kaufm_klassen", unterrichts.Fachschaften(lehrers, new List<string>() { "WL", "WBL" }), anrechnungs));
+            this.Add(new Team("Fachschaft Sport", "Fachschaft Sport", "Vorsitz", ":fachschaften:sport", unterrichts.Fachschaften(lehrers, new List<string>() { "SP", "SP G1", "SP G2" }), anrechnungs));
+            this.Add(new Team("Fachschaft Biologie", "Fachschaft Biologie", "Vorsitz", ":fachschaften:biologie", unterrichts.Fachschaften(lehrers, new List<string>() { "BI", "Bi", "Bi FU", "Bi1", "Bi G1", "Bi G2", "BI G1", "BI L1" }), anrechnungs));
+
+            this.Add(new Team("Kollegium", "Kollegium", "Schulleiter", ":Kollegium", lehrers, anrechnungs));
+            this.Add(new Team("Bildungsgangleitungen", "Bildungsgangleitungen", "", "Bildungsgangleitung", anrechnungs.LuL(lehrers, "Bildungsgangleitung"), anrechnungs));
+            this.Add(new Team("Erweiterte Schulleitung", "Erweiterte Schulleitung", "", ":geschaeftsverteilungsplan:erweiterte_schulleitung", anrechnungs.LuL(lehrers, "Erweiterte Schulleitung"), anrechnungs));
+            this.Add(new Team("Lehrerinnen", "Lehrerinnen", "Ansprechpartnerin für Gleichstellung", ":lehrerinnen", lehrers.Lehrerinnen(), anrechnungs));
+
+            this.Add(new Team("Verbindungslehrkräfte", "SV", "", ":verbindungslehrkraefte", anrechnungs.LuL(lehrers, "Verbindungslehrkräfte"), anrechnungs));
+            this.Add(new Team("Referendare", "Referendare", "", ":referendar_innen", lehrers.Referendare(), anrechnungs));
+            this.Add(new Team("Klassenleitungen", "Klassenleitungen", "", ":geschaeftsverteilungsplan:klassenleitungen", klasses.GetKlassenleitungen(lehrers), anrechnungs));
+
         }
 
         internal void GruppenUndMitgliederToCsv(string datei)
         {
             UTF8Encoding utf8NoBom = new UTF8Encoding(false);
-            var filePath = Global.Dateipfad + datei;
-
-            File.WriteAllText(filePath, "\"Page\",\"Mitglieder\",\"MitgliederMail\",\"MitgliederKuerzel\"" + Environment.NewLine, utf8NoBom);
+            Global.OrdnerAnlegen(datei);
+            
+            File.WriteAllText(Global.TempPfad + datei, "\"Page\",\"Mitglieder\",\"MitgliederMail\",\"MitgliederKuerzel\"" + Environment.NewLine, utf8NoBom);
 
             foreach (var team in this.ToList())
             {
@@ -232,7 +264,7 @@ teamSoll.Langname.StartsWith("HB")))
 
                         zeile = zeile.Trim();
 
-                        File.AppendAllText(filePath, zeile + Environment.NewLine, utf8NoBom);
+                        File.AppendAllText(Global.TempPfad + datei, zeile + Environment.NewLine, utf8NoBom);
                     }
                     catch (Exception ex)
                     {
@@ -240,6 +272,8 @@ teamSoll.Langname.StartsWith("HB")))
                     }
                 }
             }
+            Global.WriteLine("Gruppen", this.Count);
+            Global.Dateischreiben(datei);
         }
 
         internal void Hinzufügen(Teams teams)

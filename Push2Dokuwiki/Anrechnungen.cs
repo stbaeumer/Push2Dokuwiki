@@ -234,9 +234,10 @@ ORDER BY CountValue.TEACHER_ID;
         internal void UntisAnrechnungsToCsv(string datei, List<int> nurDieseGründe, List<int> fürDieseGründeKeinenWert, List<string> fürDieseLehrerKeineWerte)
         {
             UTF8Encoding utf8NoBom = new UTF8Encoding(false);
-            var filePath = Global.Dateipfad + datei;
-
-            File.WriteAllText(filePath, "\"Name\",\"Kuerzel\",\"Mail\",\"Wert\",\"von\",\"bis\",\"Rolle\",\"Amt\",\"Grund\",\"Beschreibung\",\"Hinweis\",\"Kategorien\"" + Environment.NewLine, utf8NoBom);
+            
+            Global.OrdnerAnlegen(datei);
+            
+            File.WriteAllText(Global.TempPfad + datei, "\"Name\",\"Kuerzel\",\"Mail\",\"Wert\",\"von\",\"bis\",\"Rolle\",\"Amt\",\"Grund\",\"Beschreibung\",\"Hinweis\",\"Kategorien\"" + Environment.NewLine, utf8NoBom);
 
             foreach (var a in this.OrderBy(x => x.Lehrer.Kürzel))
             {
@@ -260,9 +261,12 @@ ORDER BY CountValue.TEACHER_ID;
                         kategorien += c + ",";
                     }
 
-                    File.AppendAllText(filePath, "\"" + (a.Lehrer.Titel == "" ? "" : a.Lehrer.Titel + " ") + a.Lehrer.Vorname + " " + a.Lehrer.Nachname + "\",\"" + a.Lehrer.Kürzel + "\",\"" + a.Lehrer.Mail + "\",\"" + wert + "\",\"" + (a.Von.Year == 1 ? "" : a.Von.ToShortDateString()) + "\",\"" + (a.Bis.Year == 1 ? "" : a.Bis.ToShortDateString()) + "\",\"" + a.Rolle + "\",\"" + a.Amt + "\",\"" + a.Grund + "\",\"" + (a.Beschr == "" ? "" : "[[" + a.Beschr + "]]") + "\",\"" + a.Hinweis + "\",\"" + kategorien.TrimEnd(',') + "\"" + Environment.NewLine, utf8NoBom);
+                    File.AppendAllText(Global.TempPfad + datei, "\"" + (a.Lehrer.Titel == "" ? "" : a.Lehrer.Titel + " ") + a.Lehrer.Vorname + " " + a.Lehrer.Nachname + "\",\"" + a.Lehrer.Kürzel + "\",\"" + a.Lehrer.Mail + "\",\"" + wert + "\",\"" + (a.Von.Year == 1 ? "" : a.Von.ToShortDateString()) + "\",\"" + (a.Bis.Year == 1 ? "" : a.Bis.ToShortDateString()) + "\",\"" + a.Rolle + "\",\"" + a.Amt + "\",\"" + a.Grund + "\",\"" + (a.Beschr == "" ? "" : "[[" + a.Beschr + "]]") + "\",\"" + a.Hinweis + "\",\"" + kategorien.TrimEnd(',') + "\"" + Environment.NewLine, utf8NoBom);
                 }
             }
+            
+            Global.WriteLine("Untisanrechungen", this.Count);
+            Global.Dateischreiben(datei);
         }
 
         internal Lehrer GetBildungsgangleitung(Bildungsgang bildungsgang, Lehrers lehrers)

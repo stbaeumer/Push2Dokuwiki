@@ -193,7 +193,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
             File.AppendAllText(tempdatei, "" + Environment.NewLine);
             File.AppendAllText(tempdatei, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine);
 
-            Global.Dateischreiben("Anrechnungen", datei, tempdatei);
+            Global.Dateischreiben("Anrechnungen");
         }
 
         internal void DateiKollegiumErzeugen(string tempdatei, Unterrichts unterrichts, Klasses klasses, Fachschaften fachschaften, Bildungsgangs bildungsgangs)
@@ -400,7 +400,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
             File.AppendAllText(tempdatei, "" + Environment.NewLine);
             File.AppendAllText(tempdatei, "Seite erstellt mit [[github>stbaeumer/Push2Dokuwiki|Push2Dokuwiki]]." + Environment.NewLine);
 
-            Global.Dateischreiben("DateiKollegium",datei,tempdatei);
+            Global.Dateischreiben("DateiKollegium");
         }
 
         internal List<Lehrer> Lehrerinnen()
@@ -489,16 +489,12 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
             return members;
         }
 
-        internal void Sprechtag(string tempdatei, Raums raums, Klasses klasses, Unterrichts unterrichts)
+        internal void Sprechtag(string datei, Raums raums, Klasses klasses, Unterrichts unterrichts, Lehrers alleLehrerImUnterricht, string hinweis)
         {
-            var datei = Global.Dateipfad + tempdatei;
-            int lastSlashIndex = tempdatei.LastIndexOf('\\');
-            string result = (lastSlashIndex != -1) ? tempdatei.Substring(lastSlashIndex + 1) : tempdatei;
-            tempdatei = System.IO.Path.GetTempPath() + result;
-                        
+            Global.OrdnerAnlegen(datei);
+
             var alleLehrerImUnterrichtKürzel = (from u in unterrichts select u.LehrerKürzel).Distinct().ToList();
 
-            var alleLehrerImUnterricht = new Lehrers();
             var vergebeneRäume = new Raums();
 
             foreach (var lehrer in this.OrderBy(x => x.Nachname).ThenBy(x => x.Vorname))
@@ -527,53 +523,47 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
                     }
                 }
             }
+                        
+            File.WriteAllText(Global.TempPfad + datei, "====== Sprechtag ======" + Environment.NewLine);
+            File.AppendAllText(Global.TempPfad + datei, Environment.NewLine);
 
-            // Hier weitere TN an Sprechtag einbauen
-
-            //alleLehrerImUnterricht.Add(new Lehrer("Kessens", "", "w", "Landwirtschaftskammer NRW", "3307"));
-            //alleLehrerImUnterricht.Add(new Lehrer("Wenz", "Dr.", "w", "Landwirtschaftskammer NRW", "3301"));
-            //alleLehrerImUnterricht.Add(new Lehrer("Plaßmann", "", "m", "Schulleiter, bitte im Schulbüro melden.", "1014"));
-
-            File.WriteAllText(tempdatei, "====== Sprechtag ======" + Environment.NewLine);
-            File.AppendAllText(tempdatei, Environment.NewLine);
-
-            File.AppendAllText(tempdatei, "Zum jährlichen Sprechtag laden wir sehr herzlich am Mittwoch nach der Zeugnisausgabe in der Zeit von 13:30 bis 17:30 Uhr ein. Der Unterricht endet nach der 5. Stunde um 12:00 Uhr." + Environment.NewLine);
+            File.AppendAllText(Global.TempPfad + datei, hinweis + Environment.NewLine);
 
             int i = 1;
-            File.AppendAllText(tempdatei, Environment.NewLine);
-            File.AppendAllText(tempdatei, "<WRAP column 15em>" + Environment.NewLine);
-            File.AppendAllText(tempdatei, Environment.NewLine);
-            File.AppendAllText(tempdatei, "^Name^Raum^" + Environment.NewLine);
+            File.AppendAllText(Global.TempPfad + datei, Environment.NewLine);
+            File.AppendAllText(Global.TempPfad + datei, "<WRAP column 15em>" + Environment.NewLine);
+            File.AppendAllText(Global.TempPfad + datei, Environment.NewLine);
+            File.AppendAllText(Global.TempPfad + datei, "^Name^Raum^" + Environment.NewLine);
 
             var lehrerProSpalteAufSeite2 = ((alleLehrerImUnterricht.Count - 60) / 3) + 1;
 
             foreach (var l in alleLehrerImUnterricht.OrderBy(x => x.Nachname))
             {
-                File.AppendAllText(tempdatei, "|" + (l.Geschlecht == "m" ? "Herr " : "Frau ") + (l.Titel == "" ? "" : l.Titel + " ") + l.Nachname + (l.Text2 == "" ? "" : " ((" + l.Text2 + "))") + "|" + (l.Raum == "" ? "|" : l.Raum + "|") + Environment.NewLine);
+                File.AppendAllText(Global.TempPfad + datei, "|" + (l.Geschlecht == "m" ? "Herr " : "Frau ") + (l.Titel == "" ? "" : l.Titel + " ") + l.Nachname + (l.Text2 == "" ? "" : " ((" + l.Text2 + "))") + "|" + (l.Raum == "" ? "|" : l.Raum + "|") + Environment.NewLine);
 
                 if (i == 20 || i == 40 || i == 60 || i == 60 + lehrerProSpalteAufSeite2 || i == 60 + lehrerProSpalteAufSeite2 * 2)
                 {
-                    File.AppendAllText(tempdatei, "</WRAP>" + Environment.NewLine);
-                    File.AppendAllText(tempdatei, Environment.NewLine);
+                    File.AppendAllText(Global.TempPfad + datei, "</WRAP>" + Environment.NewLine);
+                    File.AppendAllText(Global.TempPfad + datei, Environment.NewLine);
 
                     if (i == 60)
                     {
-                        File.AppendAllText(tempdatei, "<WRAP pagebreak>" + Environment.NewLine);
+                        File.AppendAllText(Global.TempPfad + datei, "<WRAP pagebreak>" + Environment.NewLine);
                     }
 
-                    File.AppendAllText(tempdatei, "<WRAP column 15em>" + Environment.NewLine);
-                    File.AppendAllText(tempdatei, Environment.NewLine);
-                    File.AppendAllText(tempdatei, "^Name^Raum^" + Environment.NewLine);
+                    File.AppendAllText(Global.TempPfad + datei, "<WRAP column 15em>" + Environment.NewLine);
+                    File.AppendAllText(Global.TempPfad + datei, Environment.NewLine);
+                    File.AppendAllText(Global.TempPfad + datei, "^Name^Raum^" + Environment.NewLine);
                 }
                 i++;
             }
 
-            File.AppendAllText(tempdatei, "</WRAP>" + Environment.NewLine);
-            File.AppendAllText(tempdatei, Environment.NewLine);
+            File.AppendAllText(Global.TempPfad + datei, "</WRAP>" + Environment.NewLine);
+            File.AppendAllText(Global.TempPfad + datei, Environment.NewLine);
 
-            File.AppendAllText(tempdatei, "Klassenleitungen finden die Einladung als Kopiervorlage im [[sharepoint>:f:/s/Kollegium2/EjakJvXmitdCkm_iQcqOTLwB-9EWV5uqXE8j3BrRzKQQAw?e=OwxG0N|Sharepoint]].\r\n" + Environment.NewLine);
+            File.AppendAllText(Global.TempPfad + datei, "Klassenleitungen finden die Einladung als Kopiervorlage im [[sharepoint>:f:/s/Kollegium2/EjakJvXmitdCkm_iQcqOTLwB-9EWV5uqXE8j3BrRzKQQAw?e=OwxG0N|Sharepoint]].\r\n" + Environment.NewLine);
 
-            File.AppendAllText(tempdatei, Environment.NewLine);
+            File.AppendAllText(Global.TempPfad + datei, Environment.NewLine);
 
             string freieR = "";
             foreach (var raum in raums.OrderBy(x => x.Raumnummer))
@@ -589,24 +579,24 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
             Console.WriteLine(@"Sprechtag: Freie Räume müssen in Untis in den Lehrer-Stammdaten eingetragen werden:
 " + freieR.TrimEnd(','));
 
-            Global.Dateischreiben(result, datei, tempdatei);
+            Global.Dateischreiben(datei);
         }
 
-        internal void LulToCsv(string v)
+        internal void Csv(string datei)
         {
             UTF8Encoding utf8NoBom = new UTF8Encoding(false);
-            var filePath = Global.Dateipfad + v;
-
-            File.WriteAllText(filePath, "\"Kürzel\",\"Vorname\",\"Nachname\",\"Name\",\"Mail\"" + Environment.NewLine, utf8NoBom);
+            
+            File.WriteAllText(Global.TempPfad + datei, "\"Kürzel\",\"Vorname\",\"Nachname\",\"Name\",\"Mail\"" + Environment.NewLine, utf8NoBom);
             
             foreach (var l in this.OrderBy(x => x.Nachname))
             {
                 // Das Deputat unterscheidet LuL von Mitarbeitern
                 if (l.Deputat != 0)
                 {
-                    File.AppendAllText(filePath, "\"" + l.Kürzel + "\",\"" + l.Vorname + "\",\"" + l.Nachname + "\",\"" + (l.Titel == "" ? "" : l.Titel + " ") + l.Vorname + " " + l.Nachname + "\",\"" + l.Mail + "\"" + Environment.NewLine, utf8NoBom);
+                    File.AppendAllText(Global.TempPfad + datei, "\"" + l.Kürzel + "\",\"" + l.Vorname + "\",\"" + l.Nachname + "\",\"" + (l.Titel == "" ? "" : l.Titel + " ") + l.Vorname + " " + l.Nachname + "\",\"" + l.Mail + "\"" + Environment.NewLine, utf8NoBom);
                 }                
             }
+            Global.Dateischreiben(datei);
         }
 
         internal void AnrechnungenCsv(string tempdatei)
@@ -633,7 +623,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
                 }
             }
 
-            Global.Dateischreiben("Anrechnungen", datei, tempdatei);
+            Global.Dateischreiben("Anrechnungen");
         }
     }
 }

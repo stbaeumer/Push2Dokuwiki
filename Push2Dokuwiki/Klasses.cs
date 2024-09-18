@@ -167,54 +167,52 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
             return klassenMitAbwesenheiten;
         }
 
-        internal void Csv(string v)
+        internal void Csv(string datei)
         {
-            UTF8Encoding utf8NoBom = new UTF8Encoding(false);
-            var filePath = Global.Dateipfad + v;
+            UTF8Encoding utf8NoBom = new UTF8Encoding(false);            
 
-            File.WriteAllText(filePath, "\"Name\",\"Klassenleitung\",\"Klassensprecher\",\"Klassensprecher2\"" + Environment.NewLine, utf8NoBom);
+            File.WriteAllText(Global.TempPfad + datei, "\"Name\",\"Klassenleitung\",\"Klassensprecher\",\"Klassensprecher2\"" + Environment.NewLine, utf8NoBom);
 
             foreach (var l in this.OrderBy(x => x.NameUntis))
             {
-                File.AppendAllText(filePath, "\"" + l.NameUntis + "\",\"" + string.Join(",", (from le in l.Klassenleitungen select le.Kürzel).ToList()) + "\",\"" + "" + "\",\"\"" + Environment.NewLine, utf8NoBom);
+                File.AppendAllText(Global.TempPfad + datei, "\"" + l.NameUntis + "\",\"" + string.Join(",", (from le in l.Klassenleitungen select le.Kürzel).ToList()) + "\",\"" + "" + "\",\"\"" + Environment.NewLine, utf8NoBom);
             }
+            Global.Dateischreiben(datei);
         }
 
-        internal void KlassenpflegschaftDatenquelle(string dateiname, Schuelers schuelers, Lehrers lehrers, Raums raums, Anrechnungs untisanrechnungs)
+        internal void Klassenpflegschaft(string dateiname, Schuelers schuelers, Lehrers lehrers, Raums raums, Anrechnungs untisanrechnungs)
         {            
             List<string> vergebeneRäume = new List<string>();
             List<string> mehrfachVergebeneRäume = new List<string>();
-
-            var dateiPfadTxt = Global.Dateipfad + dateiname + ".txt";
-            var dateiCsv = Global.Dateipfad + dateiname + "Datenquelle.csv";
-            var dateiTempPfad = System.IO.Path.GetTempPath() + dateiname + ".txt";
+            Global.OrdnerAnlegen(dateiname);
 
             var zeilen = new List<string>();
             
-            File.WriteAllText(dateiTempPfad, "====== Klassenpflegschaft ======" + Environment.NewLine, Encoding.UTF8);
+            File.WriteAllText(Global.TempPfad + dateiname + ".txt", "====== Klassenpflegschaft ======" + Environment.NewLine, Encoding.UTF8);
             
-            File.WriteAllText(dateiCsv, "\"Klasse\",\"Klassenleitung\",\"Bildungsgang\",\"Raum\",\"Anzahl\"" + Environment.NewLine, Encoding.UTF8);
+            File.WriteAllText(Global.TempPfad + dateiname + "-datenquelle.csv", "\"Klasse\",\"Klassenleitung\",\"Bildungsgang\",\"Raum\",\"Anzahl\"" + Environment.NewLine, Encoding.UTF8);
 
-            File.AppendAllText(dateiTempPfad, "" + Environment.NewLine, Encoding.UTF8);
-                        File.AppendAllText(dateiTempPfad, "" + Environment.NewLine, Encoding.UTF8);
-            File.AppendAllText(dateiTempPfad, "" + Environment.NewLine, Encoding.UTF8);
-            File.AppendAllText(dateiTempPfad, "==== wir begrüßen alle Eltern sehr herzlich zur Klassenpflegschaft am ====" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "==== Wir begrüßen alle Eltern sehr herzlich zur Klassenpflegschaft am: ====" + Environment.NewLine, Encoding.UTF8);
             
-            File.AppendAllText(dateiTempPfad, "---- struct global ----" + Environment.NewLine, Encoding.UTF8);
-            File.AppendAllText(dateiTempPfad, "schema: termine_kollegium" + Environment.NewLine, Encoding.UTF8);
-            File.AppendAllText(dateiTempPfad, "cols:Datum" + Environment.NewLine, Encoding.UTF8);
-            File.AppendAllText(dateiTempPfad, "head:Datum/Uhrzeit" + Environment.NewLine, Encoding.UTF8);
-            File.AppendAllText(dateiTempPfad, "filterand: Seite~*lassenpflegschaft*" + Environment.NewLine, Encoding.UTF8);
-            File.AppendAllText(dateiTempPfad, "dynfilters: 0" + Environment.NewLine, Encoding.UTF8);
-            File.AppendAllText(dateiTempPfad, "csv: 0" + Environment.NewLine, Encoding.UTF8);
-            File.AppendAllText(dateiTempPfad, "----" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "---- struct global ----" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "schema: termine_kollegium" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "cols:Datum" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "head:Datum/Uhrzeit" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "filterand: Seite~*lassenpflegschaft*" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "dynfilters: 0" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "csv: 0" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "----" + Environment.NewLine, Encoding.UTF8);
 
-            File.AppendAllText(dateiTempPfad, "Haben Sie Fragen? Dann melden Sie sich gerne!" + Environment.NewLine, Encoding.UTF8);
-            File.AppendAllText(dateiTempPfad, "" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "**Haben Sie Fragen? Dann melden Sie sich gerne!**" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "" + Environment.NewLine, Encoding.UTF8);
 
-            File.AppendAllText(dateiTempPfad, "==== Raumplan ====" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "==== Raumplan ====" + Environment.NewLine, Encoding.UTF8);
 
-            File.AppendAllText(dateiTempPfad, "^  Klasse  ^  Klassenleitung  ^  Bildungsgang  ^  Raum  ^" + Environment.NewLine, Encoding.UTF8);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "<searchtable>" + Environment.NewLine);
+            File.AppendAllText(Global.TempPfad + dateiname + ".txt", "^  Klasse  ^  Klassenleitung  ^  Bildungsgang  ^  Raum  ^" + Environment.NewLine, Encoding.UTF8);
 
             List<string> berufe = new List<string>();
 
@@ -254,13 +252,12 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
                             }
                         }
 
-                        File.AppendAllText(dateiCsv, "\"" + SchneideVorErsterZahlAb(klasse.NameUntis) + "*" + "\",\"" + leitung + "\",\"" + klasse.BildungsgangLangname + "\",\"" + klasse.Raum + "\",\"" + anzahlSuS + "\"" + Environment.NewLine, Encoding.UTF8);
+                        File.AppendAllText(Global.TempPfad + dateiname + "-datenquelle.csv", "\"" + SchneideVorErsterZahlAb(klasse.NameUntis) + "*" + "\",\"" + leitung + "\",\"" + klasse.BildungsgangLangname + "\",\"" + klasse.Raum + "\",\"" + anzahlSuS + "\"" + Environment.NewLine, Encoding.UTF8);
 
                         zeilen.Add("|" + SchneideVorErsterZahlAb(klasse.NameUntis) + "*" + "  |" + leitung + "  |" + klasse.BildungsgangLangname + "  |" + klasse.Raum + "  |");
                     }
                     catch (Exception ex)
                     {
-
                         throw;
                     }
                 }
@@ -284,7 +281,7 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
                             }
                         }
 
-                        File.AppendAllText(dateiCsv, "\"" + klasse.NameUntis + "\",\"" + leitung + "\",\"" + klasse.BildungsgangLangname + "\",\"" + klasse.Raum + "\",\"" + anzahlSuS + "\"" + Environment.NewLine, Encoding.UTF8);
+                        File.AppendAllText(Global.TempPfad + dateiname + "-datenquelle.csv", "\"" + klasse.NameUntis + "\",\"" + leitung + "\",\"" + klasse.BildungsgangLangname + "\",\"" + klasse.Raum + "\",\"" + anzahlSuS + "\"" + Environment.NewLine, Encoding.UTF8);
                         zeilen.Add("|" + klasse.NameUntis + "  |" + leitung + "  |" + klasse.BildungsgangLangname + "  |" + klasse.Raum + "  |");
                     }
                     catch (Exception ex)
@@ -293,7 +290,8 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
                     }
                 }
             }
-            Global.WriteLine("Klassenpflegschaften",0);
+            zeilen.Add("</searchtable>" + Environment.NewLine);
+            Global.WriteLine("Klassenpflegschaften",zeilen.Count());
             Global.WriteLine(" Mehrfach vergebene Räume:" + String.Join(",", mehrfachVergebeneRäume), Console.WindowWidth);
 
             string freieR = "";
@@ -312,10 +310,11 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
 
             foreach (var zeile in zeilen)
             {   
-                File.AppendAllText(dateiTempPfad, zeile + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Global.TempPfad + dateiname + ".txt", zeile + Environment.NewLine, Encoding.UTF8);
             }
 
-            Global.Dateischreiben(dateiname, dateiPfadTxt, dateiTempPfad);
+            Global.Dateischreiben(dateiname + ".txt");
+            Global.Dateischreiben(dateiname + "-datenquelle.csv");
         }
 
         private string bgAusschneiden(string input)
