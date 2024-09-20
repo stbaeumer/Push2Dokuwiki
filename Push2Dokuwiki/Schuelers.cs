@@ -511,15 +511,15 @@ WHERE SCHOOLYEAR_ID =" + Global.AktSj[0] + Global.AktSj[1] + ";";
             zeilen.Add(@"**Fragen & Antworten**" + Environment.NewLine);
             zeilen.Add(@"" + Environment.NewLine);
             zeilen.Add(@"  * :?: Was ist das Ziel dieser Seite? :!: Kritische Fälle erkennen, Reaktionszeiten verkürzen, Klassenleitungen Arbeit abnehmen, SuS signalisieren, dass wir hinschauen." + Environment.NewLine);
-            
+
             zeilen.Add(@"  * :?: Wie oft soll ich mahnen? :!: Nach der Mahnung folgt i.d.R. die Teilkonferenz oder das Bußgeldverfahren. Wenn die letzte Mahnung sehr lange her ist, kommt eine weitere Mahnung in Betracht. " + Environment.NewLine);
-            
+
             zeilen.Add(@"  * :?: Was, wenn die Zahlen nicht stimmen? :!: Dann gerne melden bei [[chat>stefan.baeumer|Stefan Bäumer]]." + Environment.NewLine);
-            
+
             zeilen.Add(@"  * :?: Muss ich eine irgendwem eine Rückmeldung zu den Fällen in meiner Klasse geben? :!: Nein. Eine Rückmeldung ist nicht notwendig. Wer Fragen hat, kann sich natürlich immer melden: [[chat>stefan.baeumer|Stefan Bäumer]]." + Environment.NewLine);
             zeilen.Add(@"" + Environment.NewLine);
             zeilen.Add(@"" + Environment.NewLine);
-            zeilen.Add(@"" + Environment.NewLine);            
+            zeilen.Add(@"" + Environment.NewLine);
             zeilen.Add(@"" + Environment.NewLine);
             zeilen.Add(@"===== Tabelle Schulpflichtüberwachung KW " + kalenderwoche + "=====" + Environment.NewLine);
             zeilen.Add(@"" + Environment.NewLine);
@@ -1174,7 +1174,7 @@ ORDER BY DBA.klasse.s_klasse_art DESC, DBA.noten_kopf.dat_notenkonferenz DESC, D
         internal void PraktikantenCsv(string datei, List<string> interessierendeKlassenUndJg)
         {
             UTF8Encoding utf8NoBom = new UTF8Encoding(false);
-            
+
             var praktikanten = new List<Schueler>();
 
             foreach (var item in interessierendeKlassenUndJg)

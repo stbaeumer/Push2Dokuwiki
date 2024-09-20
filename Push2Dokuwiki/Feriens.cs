@@ -28,7 +28,7 @@ WHERE (((Holiday.SCHOOLYEAR_ID)=" + Global.AktSj[0] + Global.AktSj[1] + ") AND (
                 {
                     SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
 
-                    Console.WriteLine("Ferien");                    
+                    Console.WriteLine("Ferien");
 
                     while (sqlDataReader.Read())
                     {
@@ -58,11 +58,11 @@ WHERE (((Holiday.SCHOOLYEAR_ID)=" + Global.AktSj[0] + Global.AktSj[1] + ") AND (
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());                
+                Console.WriteLine(ex.ToString());
             }
-            finally 
-            { 
-                sqlConnection.Close(); 
+            finally
+            {
+                sqlConnection.Close();
             }
         }
 

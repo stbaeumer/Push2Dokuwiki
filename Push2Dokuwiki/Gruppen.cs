@@ -8,10 +8,9 @@ namespace Push2Dokuwiki
     {
         public Gruppen(string kriterium)
         {
-            string datei = "";
             try
             {
-                datei = Global.CheckFile(kriterium);
+                string datei = Global.CheckFile(kriterium);
 
                 if (datei != null)
                 {
@@ -33,11 +32,13 @@ namespace Push2Dokuwiki
                                 {
                                     var x = line.Split('\t');
 
-                                    gruppe = new Gruppe();
-                                    gruppe.MarksPerLessonZeile = i;
-                                    gruppe.StudentId = Convert.ToInt32(x[0]);
-                                    gruppe.Gruppenname = x[3];
-                                    gruppe.Fach = x[4];
+                                    gruppe = new Gruppe
+                                    {
+                                        MarksPerLessonZeile = i,
+                                        StudentId = Convert.ToInt32(x[0]),
+                                        Gruppenname = x[3],
+                                        Fach = x[4]
+                                    };
                                     try
                                     {
                                         gruppe.Startdate = DateTime.ParseExact(x[5], "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);

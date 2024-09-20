@@ -169,7 +169,7 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
 
         internal void Csv(string datei)
         {
-            UTF8Encoding utf8NoBom = new UTF8Encoding(false);            
+            UTF8Encoding utf8NoBom = new UTF8Encoding(false);
 
             File.WriteAllText(Global.TempPfad + datei, "\"Name\",\"Klassenleitung\",\"Klassensprecher\",\"Klassensprecher2\"" + Environment.NewLine, utf8NoBom);
 
@@ -181,22 +181,22 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
         }
 
         internal void Klassenpflegschaft(string dateiname, Schuelers schuelers, Lehrers lehrers, Raums raums, Anrechnungs untisanrechnungs)
-        {            
+        {
             List<string> vergebeneRäume = new List<string>();
             List<string> mehrfachVergebeneRäume = new List<string>();
             Global.OrdnerAnlegen(dateiname);
 
             var zeilen = new List<string>();
-            
+
             File.WriteAllText(Global.TempPfad + dateiname + ".txt", "====== Klassenpflegschaft ======" + Environment.NewLine, Encoding.UTF8);
-            
+
             File.WriteAllText(Global.TempPfad + dateiname + "-datenquelle.csv", "\"Klasse\",\"Klassenleitung\",\"Bildungsgang\",\"Raum\",\"Anzahl\"" + Environment.NewLine, Encoding.UTF8);
 
             File.AppendAllText(Global.TempPfad + dateiname + ".txt", "" + Environment.NewLine, Encoding.UTF8);
             File.AppendAllText(Global.TempPfad + dateiname + ".txt", "" + Environment.NewLine, Encoding.UTF8);
             File.AppendAllText(Global.TempPfad + dateiname + ".txt", "" + Environment.NewLine, Encoding.UTF8);
             File.AppendAllText(Global.TempPfad + dateiname + ".txt", "==== Wir begrüßen alle Eltern sehr herzlich zur Klassenpflegschaft am: ====" + Environment.NewLine, Encoding.UTF8);
-            
+
             File.AppendAllText(Global.TempPfad + dateiname + ".txt", "---- struct global ----" + Environment.NewLine, Encoding.UTF8);
             File.AppendAllText(Global.TempPfad + dateiname + ".txt", "schema: termine_kollegium" + Environment.NewLine, Encoding.UTF8);
             File.AppendAllText(Global.TempPfad + dateiname + ".txt", "cols:Datum" + Environment.NewLine, Encoding.UTF8);
@@ -216,7 +216,7 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
 
             List<string> berufe = new List<string>();
 
-            foreach (var klasse in (from t in this.OrderBy(x => x.Stufe).ThenBy(x=>x.NameUntis) where t.Stufe != null where t.Stufe != "" select t).ToList())
+            foreach (var klasse in (from t in this.OrderBy(x => x.Stufe).ThenBy(x => x.NameUntis) where t.Stufe != null where t.Stufe != "" select t).ToList())
             {
                 // Berufsschule wird nach Berufen geclustert
 
@@ -230,7 +230,7 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
                     {
                         var lehrer = (from u in untisanrechnungs
                                       where u.Text.Contains("ildungsgangleitung")
-                                      where bgAusschneiden(u.Beschr.ToLower()) == SchneideVorErsterZahlAb(klasse.NameUntis.ToLower())
+                                      where BgAusschneiden(u.Beschr.ToLower()) == SchneideVorErsterZahlAb(klasse.NameUntis.ToLower())
                                       select u.Lehrer).FirstOrDefault();
 
                         string leitung = "";
@@ -261,11 +261,11 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
                         throw;
                     }
                 }
-                if(!klasse.Stufe.StartsWith("BS"))
+                if (!klasse.Stufe.StartsWith("BS"))
                 {
                     try
                     {
-                        var leitung = "[[" + klasse.Klassenleitungen[0].Mail + "|" +(klasse.Klassenleitungen[0].Geschlecht == "m" ? "Herr" : "Frau") + " " + (klasse.Klassenleitungen[0].Titel == "" ? "" : klasse.Klassenleitungen[0].Titel + " ") + " " + klasse.Klassenleitungen[0].Nachname + "]]";
+                        var leitung = "[[" + klasse.Klassenleitungen[0].Mail + "|" + (klasse.Klassenleitungen[0].Geschlecht == "m" ? "Herr" : "Frau") + " " + (klasse.Klassenleitungen[0].Titel == "" ? "" : klasse.Klassenleitungen[0].Titel + " ") + " " + klasse.Klassenleitungen[0].Nachname + "]]";
 
                         var anzahlSuS = (from s in schuelers where s.Klasse.NameUntis == klasse.NameUntis select s).Count();
 
@@ -291,7 +291,7 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
                 }
             }
             zeilen.Add("</searchtable>" + Environment.NewLine);
-            Global.WriteLine("Klassenpflegschaften",zeilen.Count());
+            Global.WriteLine("Klassenpflegschaften", zeilen.Count());
             Global.WriteLine(" Mehrfach vergebene Räume:" + String.Join(",", mehrfachVergebeneRäume), Console.WindowWidth);
 
             string freieR = "";
@@ -309,7 +309,7 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
             Console.WriteLine("  Freie Räume: " + freieR.TrimEnd(','));
 
             foreach (var zeile in zeilen)
-            {   
+            {
                 File.AppendAllText(Global.TempPfad + dateiname + ".txt", zeile + Environment.NewLine, Encoding.UTF8);
             }
 
@@ -317,7 +317,7 @@ FROM Class LEFT JOIN Teacher ON Class.TEACHER_ID = Teacher.TEACHER_ID WHERE (((C
             Global.Dateischreiben(dateiname + "-datenquelle.csv");
         }
 
-        private string bgAusschneiden(string input)
+        private string BgAusschneiden(string input)
         {
             // Den Index des letzten und vorletzten Doppelpunkts finden
             int lastColonIndex = input.LastIndexOf(':');

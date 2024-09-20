@@ -26,7 +26,7 @@ namespace Push2Dokuwiki
 
         public static string ImportPfad { get; internal set; }
         public static int SoAltDürfenImportDateienHöchstesSein { get; internal set; }
-        
+
 
         internal static string Anrechnungen()
         {
@@ -171,7 +171,7 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
 
         internal static void WriteLine(string v, string go)
         {
-            Console.WriteLine(((v + " " + ".").PadRight(130, '.')).Substring(0, 130 - Math.Min(105,go.Length) - 3) + "   " + go);
+            Console.WriteLine(((v + " " + ".").PadRight(130, '.')).Substring(0, 130 - Math.Min(105, go.Length) - 3) + "   " + go);
         }
 
         internal static void Dateischreiben(string name)
@@ -220,7 +220,7 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
                 int nextSegmentLength = Math.Min(maxLineLength, length - currentIndex);
                 // Append the segment and a line break
                 result.Append(text.Substring(currentIndex, nextSegmentLength));
-                result.Append(Environment.NewLine + "   ");                
+                result.Append(Environment.NewLine + "   ");
                 // Move to the next segment
                 currentIndex += nextSegmentLength;
             }
@@ -242,14 +242,14 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
             {
                 if (new FileInfo(sourceFile).LastWriteTime.Date < DateTime.Now.Date.AddDays(-(Global.SoAltDürfenImportDateienHöchstesSein)))
                 {
-                    Console.WriteLine("Die Datei " + sourceFile + "ist älter als " + Global.SoAltDürfenImportDateienHöchstesSein + ". ");
+                    Console.WriteLine("Die Datei " + sourceFile + "ist älter als " + Global.SoAltDürfenImportDateienHöchstesSein + " Tage. ");
                     Hinweis(Global.ImportPfad + @"\" + kriterium + ".csv");
                 }
                 if (new FileInfo(sourceFile).Length == 0)
                 {
                     Console.WriteLine("Die Datei " + sourceFile + " ist leer. Bitte füllen");
                     Hinweis(Global.ImportPfad + @"\" + kriterium + ".csv");
-                }                
+                }
             }
 
             return sourceFile;
@@ -339,7 +339,7 @@ start notepad++ C:\users\bm\Documents\GruppenOwnerMembers.csv
         internal static void OrdnerAnlegen(string datei)
         {
             string temp = Path.GetDirectoryName(Global.TempPfad + datei);
-            
+
             if (!Directory.Exists(temp))
             {
                 Directory.CreateDirectory(temp);

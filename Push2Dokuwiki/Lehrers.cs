@@ -74,9 +74,9 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
                                 catch (Exception)
                                 {
                                     // Bei Nicht-Lehrern ist das Geb.Dat. egal
-                                    if (lehrer.Deputat>0)
+                                    if (lehrer.Deputat > 0)
                                     {
-                                        if(lehrer.Kürzel != "MOR" && lehrer.Kürzel != "TIS")
+                                        if (lehrer.Kürzel != "MOR" && lehrer.Kürzel != "TIS")
                                         {
                                             Console.WriteLine(" " + lehrer.Kürzel + ": Kein Geburtsdatum");
                                         }
@@ -86,7 +86,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
                                 if (lehrer.Geburtsdatum.Year > 1)
                                 {
                                     lehrer.AlterAmErstenSchultagDiesesJahres = lehrer.GetAlterAmErstenSchultagDiesesJahres();
-                                    lehrer.ProzentStelle = lehrer.GetProzentStelle();                                    
+                                    lehrer.ProzentStelle = lehrer.GetProzentStelle();
                                     //lehrer.CheckAltersermäßigung();
                                 }
 
@@ -131,7 +131,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
         }
 
         internal void Anrechnungen(string tempdatei, Klasses klasses)
-        {   
+        {
             var datei = Global.Dateipfad + tempdatei;
             int lastSlashIndex = tempdatei.LastIndexOf('\\');
             string result = (lastSlashIndex != -1) ? tempdatei.Substring(lastSlashIndex + 1) : tempdatei;
@@ -523,7 +523,7 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
                     }
                 }
             }
-                        
+
             File.WriteAllText(Global.TempPfad + datei, "====== Sprechtag ======" + Environment.NewLine);
             File.AppendAllText(Global.TempPfad + datei, Environment.NewLine);
 
@@ -585,16 +585,16 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
         internal void Csv(string datei)
         {
             UTF8Encoding utf8NoBom = new UTF8Encoding(false);
-            
+
             File.WriteAllText(Global.TempPfad + datei, "\"Kürzel\",\"Vorname\",\"Nachname\",\"Name\",\"Mail\"" + Environment.NewLine, utf8NoBom);
-            
+
             foreach (var l in this.OrderBy(x => x.Nachname))
             {
                 // Das Deputat unterscheidet LuL von Mitarbeitern
                 if (l.Deputat != 0)
                 {
                     File.AppendAllText(Global.TempPfad + datei, "\"" + l.Kürzel + "\",\"" + l.Vorname + "\",\"" + l.Nachname + "\",\"" + (l.Titel == "" ? "" : l.Titel + " ") + l.Vorname + " " + l.Nachname + "\",\"" + l.Mail + "\"" + Environment.NewLine, utf8NoBom);
-                }                
+                }
             }
             Global.Dateischreiben(datei);
         }
@@ -609,16 +609,16 @@ WHERE (((SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ") AND  ((TERM_
             string anrechnungstring = "";
 
             File.WriteAllText(tempdatei, "\"Grund\",\"Anzahl Stunden\",\"Hinweise\",\"Lehrkraft\"" + Environment.NewLine);
-                        
+
             foreach (var lehrer in this.OrderBy(x => x.Nachname))
             {
                 foreach (var anrechnung in lehrer.Anrechnungen)
                 {
                     if (anrechnung.Grund == 500 && anrechnung.Wert > 0)
                     {
-                        var hinweise = (anrechnung.Von.Year == 1 ? "" : "von" + anrechnung.Von.ToShortDateString()+ " ") + (anrechnung.Bis.Year == 1 ? "" : "bis" + anrechnung.Bis.ToShortDateString());
+                        var hinweise = (anrechnung.Von.Year == 1 ? "" : "von" + anrechnung.Von.ToShortDateString() + " ") + (anrechnung.Bis.Year == 1 ? "" : "bis" + anrechnung.Bis.ToShortDateString());
 
-                        File.AppendAllText(tempdatei, "\""+ anrechnung.Beschr + "\",\"" + anrechnung.Wert + "\",\"" + hinweise + "\",\"" + lehrer.Kürzel +"\"" + Environment.NewLine);
+                        File.AppendAllText(tempdatei, "\"" + anrechnung.Beschr + "\",\"" + anrechnung.Wert + "\",\"" + hinweise + "\",\"" + lehrer.Kürzel + "\"" + Environment.NewLine);
                     }
                 }
             }

@@ -41,7 +41,7 @@ WHERE (((Terms.SCHOOLYEAR_ID)= " + Global.AktSj[0] + Global.AktSj[1] + ")  AND (
                             Von = DateTime.ParseExact((sqlDataReader.GetInt32(3)).ToString(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
                             Bis = DateTime.ParseExact((sqlDataReader.GetInt32(4)).ToString(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture)
                         };
-                                                
+
                         this.Add(periode);
                     };
 

@@ -21,12 +21,9 @@ namespace Push2Dokuwiki
 
         public Unterrichts(string kriterium)
         {
-            string datei = "";
-
             try
             {
-                datei = Global.CheckFile(kriterium);
-
+                string datei = Global.CheckFile(kriterium);
                 if (datei != null)
                 {
                     using (StreamReader reader = new StreamReader(datei))

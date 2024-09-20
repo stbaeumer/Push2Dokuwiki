@@ -79,11 +79,11 @@ WHERE (SCHOOLYEAR_ID=" + sj + @");
                         {
                             BeschreibungId = sqlDataReader.GetInt32(0),
                             Name = Global.SafeGetString(sqlDataReader, 1),
-                            Langname = Global.SafeGetString(sqlDataReader, 2)                            
+                            Langname = Global.SafeGetString(sqlDataReader, 2)
                         };
-                                                
+
                         beschreibungs.Add(beschreibung);
-                        
+
                     };
                     sqlDataReader.Close();
                 }
@@ -122,7 +122,7 @@ ORDER BY CountValue.TEACHER_ID;
                         Anrechnung anrechnung = new Anrechnung();
 
                         anrechnung.TeacherIdUntis = sqlDataReader.GetInt32(0);
-                        
+
                         anrechnung.Grund = Convert.ToInt32((from c in cvreasons where c.Id == sqlDataReader.GetInt32(6) select c.Name).FirstOrDefault());
                         anrechnung.Wert = Convert.ToDouble(sqlDataReader.GetInt32(3)) / 100000;
 
@@ -132,20 +132,20 @@ ORDER BY CountValue.TEACHER_ID;
                         {
                             string a = "";
                         }
-                        
-                        
+
+
                         // Die Beschr muss auf eine Wiki-Seite matchen. Beschr entspricht einem Thema oder einem Gremium
                         anrechnung.Beschr = (from b in beschreibungs where b.BeschreibungId == sqlDataReader.GetInt32(1) select b.Name).FirstOrDefault() == null ? "" : (from b in beschreibungs where b.BeschreibungId == sqlDataReader.GetInt32(1) select b.Name).FirstOrDefault();
 
 
                         // Amt und Rolle ergeben sich aus dem Text bei Grund 500 und nur dann, wenn ein KuK zugeordnet wurde. Angaben in Klammern werden ignoriert.
-                                                anrechnung.Text = Global.SafeGetString(sqlDataReader, 2) == null ? "" : Global.SafeGetString(sqlDataReader, 2); // Vorsitz etc.                            
+                        anrechnung.Text = Global.SafeGetString(sqlDataReader, 2) == null ? "" : Global.SafeGetString(sqlDataReader, 2); // Vorsitz etc.                            
                         anrechnung.Amt = anrechnung.Text.Contains("A14") ? "A14" : anrechnung.Text.Contains("A15") ? "A15" : anrechnung.Text.Contains("A16") ? "A16" : "";
 
                         // Regex für alles in runden, eckigen und geschweiften Klammern inklusive der Klammern selbst
 
                         var allesAußerKlammern = (Regex.Replace(anrechnung.Text, @"[\(\[\{][^)\]\}]*[\)\]\}]", "")).Trim();
-                        anrechnung.Rolle = (allesAußerKlammern.Replace("A14","").Replace("A15", "").Replace("A16", "")).Trim(',').Trim();
+                        anrechnung.Rolle = (allesAußerKlammern.Replace("A14", "").Replace("A15", "").Replace("A16", "")).Trim(',').Trim();
 
 
                         anrechnung.Hinweis = ZwischenEckigenKlammernStehenHinweise(anrechnung.Text);
@@ -153,11 +153,11 @@ ORDER BY CountValue.TEACHER_ID;
 
 
 
-                        
+
                         anrechnung.Von = sqlDataReader.GetInt32(4) > 0 ? DateTime.ParseExact((sqlDataReader.GetInt32(4)).ToString(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture) : new DateTime();
                         anrechnung.Bis = sqlDataReader.GetInt32(5) > 0 ? DateTime.ParseExact((sqlDataReader.GetInt32(5)).ToString(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture) : new DateTime();
-                        
-                        
+
+
                         if (anrechnung.Text.Contains("("))
                         {
                             anrechnung.TextGekürzt = anrechnung.Text.Substring(0, anrechnung.Text.IndexOf('(')).Trim();
@@ -173,7 +173,7 @@ ORDER BY CountValue.TEACHER_ID;
                             {
                                 if (anrechnung.Lehrer != null)
                                 {
-                                    if (anrechnung.Lehrer.Kürzel=="BM")
+                                    if (anrechnung.Lehrer.Kürzel == "BM")
                                     {
                                         string aa = "";
                                     }
@@ -183,7 +183,7 @@ ORDER BY CountValue.TEACHER_ID;
                                     }
                                 }
                             }
-                        }                         
+                        }
                     };
                     sqlDataReader.Close();
                 }
@@ -234,9 +234,9 @@ ORDER BY CountValue.TEACHER_ID;
         internal void UntisAnrechnungsToCsv(string datei, List<int> nurDieseGründe, List<int> fürDieseGründeKeinenWert, List<string> fürDieseLehrerKeineWerte)
         {
             UTF8Encoding utf8NoBom = new UTF8Encoding(false);
-            
+
             Global.OrdnerAnlegen(datei);
-            
+
             File.WriteAllText(Global.TempPfad + datei, "\"Name\",\"Kuerzel\",\"Mail\",\"Wert\",\"von\",\"bis\",\"Rolle\",\"Amt\",\"Grund\",\"Beschreibung\",\"Hinweis\",\"Kategorien\"" + Environment.NewLine, utf8NoBom);
 
             foreach (var a in this.OrderBy(x => x.Lehrer.Kürzel))
@@ -264,7 +264,7 @@ ORDER BY CountValue.TEACHER_ID;
                     File.AppendAllText(Global.TempPfad + datei, "\"" + (a.Lehrer.Titel == "" ? "" : a.Lehrer.Titel + " ") + a.Lehrer.Vorname + " " + a.Lehrer.Nachname + "\",\"" + a.Lehrer.Kürzel + "\",\"" + a.Lehrer.Mail + "\",\"" + wert + "\",\"" + (a.Von.Year == 1 ? "" : a.Von.ToShortDateString()) + "\",\"" + (a.Bis.Year == 1 ? "" : a.Bis.ToShortDateString()) + "\",\"" + a.Rolle + "\",\"" + a.Amt + "\",\"" + a.Grund + "\",\"" + (a.Beschr == "" ? "" : "[[" + a.Beschr + "]]") + "\",\"" + a.Hinweis + "\",\"" + kategorien.TrimEnd(',') + "\"" + Environment.NewLine, utf8NoBom);
                 }
             }
-            
+
             Global.WriteLine("Untisanrechungen", this.Count);
             Global.Dateischreiben(datei);
         }
@@ -288,7 +288,7 @@ ORDER BY CountValue.TEACHER_ID;
                 }
             }
             var x = "Keine Bildungsgangleitung bei " + bildungsgang.Kurzname + ". Stimmt der Text in der Anrechnung mit dem Langnamen in den Klassenstammdaten überein? Im Text der Anrechnung muss das Wort Bildungsgangleitung in Klammern stehen. Zusätzlich muss der Langname der Klassen im Text der Anrechnungen enthalten sein.";
-            Console.WriteLine(Global.InsertLineBreaks(x,77));
+            Console.WriteLine(Global.InsertLineBreaks(x, 77));
             return null;
         }
 
@@ -314,8 +314,8 @@ ORDER BY CountValue.TEACHER_ID;
 
         internal Lehrer GetLeitung(List<Lehrer> lehrers, string name, string leitungsbezeichnung)
         {
-            var lid = (from a in this 
-                       where a.Text == leitungsbezeichnung                       
+            var lid = (from a in this
+                       where a.Text == leitungsbezeichnung
                        select a.TeacherIdUntis).FirstOrDefault();
             if (lid == 0)
             {
@@ -366,7 +366,7 @@ ORDER BY CountValue.TEACHER_ID;
                 url = (from a in this where a.Text.Contains(suchkriterium) select a.Beschr).FirstOrDefault();
             }
             // Zuletzt wird das Suchkriterium selbst zum Link
-            if (url==null)
+            if (url == null)
             {
                 url = suchkriterium;
             }
@@ -378,9 +378,9 @@ ORDER BY CountValue.TEACHER_ID;
         {
             List<Lehrer> lehrer = new List<Lehrer>();
 
-            foreach (var a in this) 
-            { 
-                if (a.Text.Contains(v)) 
+            foreach (var a in this)
+            {
+                if (a.Text.Contains(v))
                 {
                     if (!(from l in lehrer where l.IdUntis == a.TeacherIdUntis select l).Any())
                     {

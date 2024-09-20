@@ -14,7 +14,7 @@ namespace Push2Dokuwiki
         {
             try
             {
-                Console.WriteLine("      Push2Dokuwiki.exe | Published under the terms of GPLv3 | Stefan Bäumer " + DateTime.Now.Year + " | Version 20240913");
+                Console.WriteLine("      Push2Dokuwiki.exe | Published under the terms of GPLv3 | Stefan Bäumer " + DateTime.Now.Year + " | Version 20240918");
 
                 TrennerEinfügen();
 
@@ -27,7 +27,7 @@ namespace Push2Dokuwiki
                 var feriens = new Feriens();
                 var raums = new Raums(periode);
                 var lehrers = new Lehrers(periode, raums);
-                var klasses = new Klasses(periode, lehrers, raums);                
+                var klasses = new Klasses(periode, lehrers, raums);
                 var schuelers = new Schuelers(klasses);
                 var anrechnungs = new Anrechnungs(periode, lehrers);
                 var abwesenheiten = new Abwesenheiten("AbsencePerStudent");
@@ -46,11 +46,11 @@ namespace Push2Dokuwiki
                     new Kalender(kopfzeile,kriterium,@"CSV\termine_kollegium.csv"),
                     new Kalender(kopfzeile,kriterium,@"CSV\termine_fhr.csv"),
                     new Kalender(kopfzeile,kriterium,@"CSV\termine_berufliches_gymnasium.csv"),
-                    new Kalender(kopfzeile,kriterium,@"CSV\termine_verwaltung.csv")   
+                    new Kalender(kopfzeile,kriterium,@"CSV\termine_verwaltung.csv")
                 };
 
                 TrennerEinfügen();
-                                
+
                 anrechnungs.UntisAnrechnungsToCsv(
                     @"CSV\untisanrechnungen.csv",
                     new List<int>() { 500, 510, 530, 590, 900 },    // nur diese Gründe
@@ -60,7 +60,7 @@ namespace Push2Dokuwiki
 
                 TrennerEinfügen();
 
-                klasses.Klassenpflegschaft("klassenpflegschaft", schuelers, lehrers, raums, anrechnungs);
+                klasses.Klassenpflegschaft(@"schulmitwirkung\klassenpflegschaft\räume", schuelers, lehrers, raums, anrechnungs);
 
                 TrennerEinfügen();
 
@@ -97,7 +97,7 @@ namespace Push2Dokuwiki
                 lehrers.Csv(@"CSV\lul-utf8OhneBom-einmalig-vor-SJ-Beginn.csv");
 
                 TrennerEinfügen();
-                
+
                 fachs.Csv(@"CSV\faecher.csv");
 
                 TrennerEinfügen();
@@ -113,10 +113,10 @@ namespace Push2Dokuwiki
                 //alleLehrerImUnterricht.Add(new Lehrer("Plaßmann", "", "m", "Schulleiter, bitte im Schulbüro melden.", "1014"));
 
                 lehrers.Sprechtag(
-                    @"oeffentlich\sprechtag.txt", 
-                    raums, 
-                    klasses, 
-                    unterrichts, 
+                    @"oeffentlich\sprechtag.txt",
+                    raums,
+                    klasses,
+                    unterrichts,
                     alleLehrerImUnterricht,
                     "Zum jährlichen Sprechtag laden wir sehr herzlich am Mittwoch nach der Zeugnisausgabe in der Zeit von 13:30 bis 17:30 Uhr ein. Der Unterricht endet nach der 5. Stunde um 12:00 Uhr."
                     );
@@ -135,12 +135,12 @@ namespace Push2Dokuwiki
 
                 TrennerEinfügen();
 
-                var teams = new Teams(klasses,unterrichts,anrechnungs,lehrers);                
+                var teams = new Teams(klasses, unterrichts, anrechnungs, lehrers);
                 teams.GruppenUndMitgliederToCsv(@"CSV\gruppen.csv");
 
                 TrennerEinfügen();
 
-                Console.ReadKey();
+                //Console.ReadKey();
             }
             catch (Exception ex)
             {
